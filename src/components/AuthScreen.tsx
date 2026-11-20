@@ -1,5 +1,3 @@
-import { OrbitControls } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
 import {
   ArrowRight,
   Bus,
@@ -8,12 +6,12 @@ import {
   Lock,
   Phone,
   Radio,
+  Sparkles,
   Ticket,
   User,
   Users,
 } from 'lucide-react';
-import React, { Suspense, useState } from 'react';
-import { ElectricBusModel, WebGLErrorBoundary } from './Bus3DShowcase';
+import React, { useRef, useState } from 'react';
 
 export interface UserProfile {
   name: string;
@@ -35,6 +33,33 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
   const [passId, setPassId] = useState('DL-DTC-84920');
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeUser, setWelcomeUser] = useState<UserProfile | null>(null);
+
+  // Perspective Tilt effect on mouse movement
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [rotateX, setRotateX] = useState(0);
+  const [rotateY, setRotateY] = useState(0);
+  const [glareX, setGlareX] = useState(50);
+  const [glareY, setGlareY] = useState(50);
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    setRotateX(-((y - centerY) / centerY) * 8);
+    setRotateY(((x - centerX) / centerX) * 10);
+    setGlareX((x / rect.width) * 100);
+    setGlareY((y / rect.height) * 100);
+  };
+
+  const handleMouseLeave = () => {
+    setRotateX(0);
+    setRotateY(0);
+    setIsHovered(false);
+  };
 
   const triggerLogin = (user: UserProfile) => {
     setWelcomeUser(user);
@@ -104,7 +129,7 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
       {/* 3. SPLIT-SCREEN DASHBOARD VIEW */}
       <main className="flex-1 flex items-center justify-center py-6 sm:py-10 px-4 sm:px-8">
         <div className="max-w-[1280px] w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* LEFT SIDE: Exact 3D Rotatable Bus Model Showcase */}
+          {/* LEFT SIDE: Exact High-Resolution Delhi Bus Visual Showcase */}
           <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-left space-y-4">
             {/* Top Telemetry Capsule: 72 LIVE BUSES • AVLS GPS */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#121620] border border-[#252c3e] text-xs font-mono font-bold text-[#ccff00] shadow-sm">
@@ -124,7 +149,7 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
               </p>
             </div>
 
-            {/* 3D Rotatable Bus Model Showcase Box */}
+            {/* Showcase Box with Exact Delhi Electric Bus Image */}
             <div className="relative w-full rounded-2xl bg-[#0e1118] border border-[#222a3d] p-3 sm:p-4 shadow-[0_20px_50px_rgba(0,0,0,0.7)] group overflow-hidden">
               {/* Dynamic Neon Volt Glow Background */}
               <div
@@ -147,41 +172,48 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
                 </div>
               </div>
 
-              {/* Real-Time Interactive 3D Canvas Model */}
-              <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-[#07090e] border border-[#1b2232] cursor-grab active:cursor-grabbing">
-                <WebGLErrorBoundary
-                  fallback={
-                    <img
-                      src="./images/delhi-bus-3d.png"
-                      alt="Delhi Transit 3D Electric Bus"
-                      className="w-full h-full object-cover object-center"
-                    />
-                  }
-                >
-                  <Canvas camera={{ position: [0, 2.5, 6.2], fov: 42 }}>
-                    <ambientLight intensity={1.1} color="#e2e8f0" />
-                    <directionalLight position={[6, 9, 6]} intensity={2.6} color="#ffffff" />
-                    <directionalLight position={[-6, 5, -5]} intensity={1.4} color="#38bdf8" />
-                    <pointLight position={[-4, 3, -3]} intensity={2.0} color="#ccff00" />
-                    <pointLight position={[4, 1.5, 4]} intensity={1.5} color="#ccff00" />
+              {/* High-Resolution Delhi Electric Bus Showcase with Perspective Tilt */}
+              <div
+                ref={cardRef}
+                onMouseMove={handleMouseMove}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={handleMouseLeave}
+                style={{
+                  transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(${
+                    isHovered ? 1.02 : 1
+                  }, ${isHovered ? 1.02 : 1}, 1)`,
+                  transition: isHovered ? 'transform 0.1s ease-out' : 'transform 0.4s ease-out',
+                }}
+                className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-[#07090e] border border-[#1b2232] flex items-center justify-center cursor-pointer group"
+              >
+                {/* Dynamic Glare Reflection Overlay */}
+                <div
+                  className="absolute inset-0 pointer-events-none rounded-xl transition-opacity duration-300 z-20"
+                  style={{
+                    background: `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(204, 255, 0, 0.15) 0%, transparent 60%)`,
+                    opacity: isHovered ? 1 : 0.2,
+                  }}
+                />
 
-                    <Suspense fallback={null}>
-                      <ElectricBusModel autoSpin={true} />
-                    </Suspense>
+                <img
+                  src="./images/delhi-bus-3d.png"
+                  alt="Delhi Transit 3D Electric Bus"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src.indexOf('delhi-bus-3d.png') !== -1 && !target.dataset.triedFallback) {
+                      target.dataset.triedFallback = 'true';
+                      target.src = '/images/delhi-bus-3d.png';
+                    }
+                  }}
+                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+                />
 
-                    <OrbitControls
-                      enablePan={false}
-                      minDistance={3.8}
-                      maxDistance={9.0}
-                      maxPolarAngle={Math.PI / 2.05}
-                    />
-                  </Canvas>
-                </WebGLErrorBoundary>
+                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#0e1118] via-transparent to-transparent pointer-events-none" />
 
                 {/* Subtitle tag */}
                 <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-[#262c3e] text-[10px] font-mono text-slate-300 pointer-events-none">
-                  <Compass className="w-3 h-3 text-[#ccff00] animate-spin" />
-                  <span>360° ROTATING ELECTRIC BUS MODEL • DRAG TO ROTATE</span>
+                  <Sparkles className="w-3 h-3 text-[#ccff00]" />
+                  <span>DELHI TRANSIT EV · TATA STARBUS AI FLEET</span>
                 </div>
               </div>
 
