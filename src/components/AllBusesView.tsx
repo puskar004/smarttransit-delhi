@@ -1,13 +1,5 @@
 import {
-  AlertTriangle,
-  Bus,
-  CheckCircle2,
-  Clock,
-  Compass,
-  Navigation,
   Search,
-  Sparkles,
-  Users,
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -17,18 +9,27 @@ import type { SimulatedBus } from '../types/transit';
 interface AllBusesViewProps {
   buses: SimulatedBus[];
   onLiveTrackBus: (vehicleId: string) => void;
-  onGoToPlanner: () => void;
+  onGoToPlanner?: () => void;
 }
 
-type FilterOption = 'ALL' | 'ON_TIME' | 'DELAYED' | 'SEATS_FREE' | 'ELECTRIC';
+type FilterOption = 'ALL' | 'ON_TIME' | 'DELAYED';
 
 export function AllBusesView({
   buses,
   onLiveTrackBus,
-  onGoToPlanner,
 }: AllBusesViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterOption>('ALL');
+
+  // Summary counts
+  const onTimeCount = useMemo(
+    () => buses.filter((b) => Math.abs(b.delayVsScheduleSec) <= 60).length,
+    [buses]
+  );
+  const delayedCount = useMemo(
+    () => buses.filter((b) => b.delayVsScheduleSec > 60).length,
+    [buses]
+  );
 
   const filteredBuses = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -47,67 +48,35 @@ export function AllBusesView({
       }
 
       // Filter matching
-      const occ = Math.round(((bus.passengersEst ?? 30) / 60) * 100);
       const isOnTime = Math.abs(bus.delayVsScheduleSec) <= 60;
       const isDelayed = bus.delayVsScheduleSec > 60;
 
       if (activeFilter === 'ON_TIME' && !isOnTime) return false;
       if (activeFilter === 'DELAYED' && !isDelayed) return false;
-      if (activeFilter === 'SEATS_FREE' && occ >= 45) return false;
-      if (activeFilter === 'ELECTRIC' && bus.operator !== 'DTC_ELECTRIC') return false;
 
       return true;
     });
   }, [buses, searchQuery, activeFilter]);
 
-  // Summary counts
-  const onTimeCount = useMemo(
-    () => buses.filter((b) => Math.abs(b.delayVsScheduleSec) <= 60).length,
-    [buses]
-  );
-  const delayedCount = useMemo(
-    () => buses.filter((b) => b.delayVsScheduleSec > 60).length,
-    [buses]
-  );
-  const seatsFreeCount = useMemo(
-    () => buses.filter((b) => Math.round(((b.passengersEst ?? 30) / 60) * 100) < 45).length,
-    [buses]
-  );
-
   return (
-    <div className="h-full flex flex-col bg-[#000000] text-white overflow-hidden font-sans select-none">
-      {/* Editorial Streetwear Style Header */}
-      <div className="p-4 sm:p-6 border-b border-[#222222] bg-[#0A0A0A] space-y-4 shrink-0">
+    <div className="h-full flex flex-col bg-[#0b0e14] text-white overflow-hidden font-sans select-none">
+      {/* Header Area */}
+      <div className="p-4 sm:p-5 border-b border-[#1c2232] bg-[#0d1017] space-y-3.5 shrink-0">
         <div>
-          <div className="text-[11px] font-mono font-bold tracking-widest text-[#CCFF00] uppercase mb-1 flex items-center gap-2">
-            <span>THE FULL FLEET ROTATION / 072</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF00] animate-pulse" />
-          </div>
-          <div className="flex items-baseline justify-between flex-wrap gap-2">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tighter text-white">
-              ALL THE BUSES.
-            </h1>
-            <button
-              type="button"
-              onClick={onGoToPlanner}
-              className="px-3.5 py-1.5 border border-[#333333] hover:border-[#CCFF00] bg-[#111111] hover:text-[#CCFF00] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-1.5"
-            >
-              <span>Plan Journey ↗</span>
-            </button>
-          </div>
-          <p className="text-xs text-[#8E8E93] mt-1 max-w-xl">
-            Delhi live AVLS GPS tracking. Real-time delay model and crowd telemetry for every active corridor.
+          <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-none">
+            ALL THE BUSES
+          </h1>
+          <p className="text-[10px] font-mono tracking-widest text-slate-400 uppercase mt-1">
+            THE FULL FLEET ROTATION
           </p>
         </div>
 
-        {/* Filter Pills — Exact SNKS "ALL BRANDS" Style */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        {/* Filter Pills — Exact Screenshot: All (72), On Time (18), Delayed (43) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 text-xs no-scrollbar">
           {[
-            { id: 'ALL', label: `ALL BUSES (${buses.length})` },
-            { id: 'ON_TIME', label: `ON TIME (${onTimeCount})` },
-            { id: 'DELAYED', label: `DELAYED (${delayedCount})` },
-            { id: 'SEATS_FREE', label: `SEATS FREE (${seatsFreeCount})` },
-            { id: 'ELECTRIC', label: 'AC ELECTRIC' },
+            { id: 'ALL', label: `All (${buses.length})` },
+            { id: 'ON_TIME', label: `On Time (${onTimeCount})` },
+            { id: 'DELAYED', label: `Delayed (${delayedCount})` },
           ].map((f) => {
             const active = activeFilter === f.id;
             return (
@@ -115,10 +84,10 @@ export function AllBusesView({
                 key={f.id}
                 type="button"
                 onClick={() => setActiveFilter(f.id as FilterOption)}
-                className={`px-3.5 py-1.5 uppercase font-black tracking-wider text-[11px] transition-all cursor-pointer whitespace-nowrap border ${
+                className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-bold tracking-wide transition-all cursor-pointer whitespace-nowrap ${
                   active
-                    ? 'bg-[#CCFF00] text-black border-[#CCFF00] shadow-[0_0_15px_rgba(204,255,0,0.3)]'
-                    : 'bg-[#111111] text-[#8E8E93] hover:text-white border-[#262626] hover:border-[#444444]'
+                    ? 'bg-[#CCFF00] text-black shadow-sm font-black'
+                    : 'bg-[#151923] text-slate-300 hover:text-white border border-[#273045]'
                 }`}
               >
                 {f.label}
@@ -127,179 +96,119 @@ export function AllBusesView({
           })}
         </div>
 
-        {/* Search Bar & Secondary Controls (Find your pair aesthetic) */}
-        <div className="flex items-center gap-2 pt-1 border-t border-[#1C1C1C]">
-          <div className="relative flex-1">
-            <Search className="w-3.5 h-3.5 text-[#666666] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Find your route or stop (e.g. 534, 429, Okhla)..."
-              className="w-full pl-9 pr-9 py-2 bg-[#111111] border border-[#262626] focus:border-[#CCFF00] text-xs text-white placeholder:text-[#555555] transition-all outline-none font-medium"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666666] hover:text-white"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-          <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-[#111111] border border-[#262626] text-[11px] font-mono text-[#8E8E93] whitespace-nowrap">
-            <span className="text-[#CCFF00] font-bold">{filteredBuses.length}</span> BUSES SHOWN
-          </div>
+        {/* Search Bar — Rounded Capsule */}
+        <div className="relative">
+          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search bus number or route..."
+            className="w-full pl-9 pr-8 py-2 bg-[#121620] border border-[#242c3e] focus:border-[#CCFF00] rounded-full text-xs text-white placeholder:text-slate-500 transition-all outline-none"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Bus Cards Grid / Stream */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
+      {/* Bus Cards Stream */}
+      <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3 no-scrollbar">
         {filteredBuses.length === 0 ? (
-          <div className="py-16 text-center text-[#666666] space-y-2">
-            <Bus className="w-10 h-10 mx-auto text-[#333333] stroke-[1.5]" />
-            <p className="text-sm font-bold uppercase tracking-wider text-white">No buses found</p>
-            <p className="text-xs text-[#666666]">
-              Try searching for bus numbers like <b className="text-[#CCFF00]">534</b> or <b className="text-[#CCFF00]">429</b>.
-            </p>
+          <div className="py-16 text-center text-slate-500 space-y-2">
+            <p className="text-xs font-mono uppercase tracking-wider text-slate-400">No buses matching filter</p>
           </div>
         ) : (
-          filteredBuses.map((bus, idx) => {
+          filteredBuses.map((bus) => {
             const routeMeta = DELHI_ROUTES.find((r) => r.shortName === bus.routeShortName);
             const occ = Math.round(((bus.passengersEst ?? 30) / 60) * 100);
             const delaySec = bus.delayVsScheduleSec;
             const delayMin = Math.round(Math.abs(delaySec) / 60);
             const isOnTime = Math.abs(delaySec) <= 60;
-            const isDelayed = delaySec > 60;
 
-            const crowdLabel =
-              occ < 40 ? 'LOW CROWD · SEATS FREE' : occ < 75 ? 'MODERATE LOAD' : 'HIGH LOAD · STANDING';
-            const seatChance = Math.max(5, Math.min(98, 100 - Math.round(occ * 0.95)));
-            const indexStr = String(idx + 1).padStart(2, '0');
+            const crowdShort = occ < 45 ? 'Low' : occ < 75 ? 'Med' : 'Heavy';
+            const seatChance = Math.max(8, Math.min(96, 100 - Math.round(occ * 0.95)));
+
+            // Route endpoints formatted cleanly
+            const stops = routeMeta?.stopIds ?? bus.stopSequence;
+            const firstStopName = (STOP_BY_ID[stops[0]]?.name ?? 'ORIGIN').toUpperCase();
+            const lastStopName = (STOP_BY_ID[stops[stops.length - 1]]?.name ?? 'DESTINATION').toUpperCase();
+            const routeHeadline = `BUS ${bus.routeShortName} • ${firstStopName} ↔ ${lastStopName}`;
 
             return (
               <div
                 key={bus.vehicleId}
-                className="bg-[#0E0E0E] hover:bg-[#141414] border border-[#222222] hover:border-[#CCFF00] p-4 transition-all duration-150 space-y-3 group"
+                className="bg-[#121620] hover:bg-[#151a26] border border-[#232a3d] hover:border-[#38435d] rounded-2xl p-3.5 transition-all duration-150 space-y-2.5 shadow-sm"
               >
-                {/* Header Row: Route, Status Badge, Monospace Index */}
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    {/* Route Badge */}
-                    <span className="px-2.5 py-0.5 bg-[#CCFF00] text-black font-black text-xs uppercase tracking-wider border border-[#CCFF00]">
-                      BUS {bus.routeShortName}
-                    </span>
-                    <span className="font-mono text-xs font-bold text-[#8E8E93]">
-                      {bus.vehicleId}
-                    </span>
-                    {bus.operator === 'DTC_ELECTRIC' && (
-                      <span className="px-1.5 py-0.5 bg-[#1A1A1A] text-[#CCFF00] text-[10px] font-mono font-bold border border-[#333333] uppercase">
-                        ⚡ ELECTRIC
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Punctuality Badge (SNKS Discount Tag style: NO RED!) */}
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-[11px] font-black uppercase tracking-wider px-2 py-0.5 inline-flex items-center gap-1 ${
-                        isOnTime
-                          ? 'bg-[#CCFF00] text-black border border-[#CCFF00]'
-                          : isDelayed
-                            ? 'bg-[#FFB800] text-black border border-[#FFB800]'
-                            : 'bg-white text-black border border-white'
-                      }`}
-                    >
-                      {isOnTime ? (
-                        <>
-                          <CheckCircle2 className="w-3 h-3 text-black stroke-[3]" />
-                          <span>ON TIME (+0M)</span>
-                        </>
-                      ) : isDelayed ? (
-                        <>
-                          <AlertTriangle className="w-3 h-3 text-black stroke-[3]" />
-                          <span>DELAYED +{delayMin}M</span>
-                        </>
-                      ) : (
-                        <>
-                          <Clock className="w-3 h-3 text-black stroke-[3]" />
-                          <span>{delayMin}M EARLY</span>
-                        </>
-                      )}
-                    </span>
-
-                    {/* Numerical Index (like 01, 02 in SNKS template) */}
-                    <span className="font-mono text-xs text-[#555555] font-bold">
-                      /{indexStr}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Corridor Route Name */}
-                <div className="text-xs text-[#E1E1E6] font-semibold truncate uppercase tracking-wide">
-                  {routeMeta?.longName ?? `Delhi Corridor ${bus.routeShortName}`}
-                </div>
-
-                {/* Metrics Row: Next Stop, Speed, Crowd Meter */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
-                  <div className="bg-[#141414] p-2.5 border border-[#222222] flex items-center gap-2">
-                    <Navigation className="w-3.5 h-3.5 text-[#CCFF00] shrink-0" />
-                    <div className="truncate">
-                      <span className="text-[#666666] block text-[9px] font-mono uppercase tracking-wider">NEXT STOP</span>
-                      <strong className="text-white truncate block text-[11px]">{bus.nextStopName}</strong>
-                    </div>
-                  </div>
-
-                  <div className="bg-[#141414] p-2.5 border border-[#222222] flex items-center gap-2">
-                    <Users className="w-3.5 h-3.5 text-[#CCFF00] shrink-0" />
-                    <div className="truncate">
-                      <span className="text-[#666666] block text-[9px] font-mono uppercase tracking-wider">CROWD LOAD</span>
-                      <strong className="text-white truncate block text-[11px] font-bold">
-                        {occ}% · {crowdLabel}
-                      </strong>
-                    </div>
-                  </div>
-
-                  <div className="bg-[#141414] p-2.5 border border-[#222222] flex items-center gap-2 col-span-2 sm:col-span-1">
-                    <Sparkles className="w-3.5 h-3.5 text-[#CCFF00] shrink-0" />
-                    <div className="truncate">
-                      <span className="text-[#666666] block text-[9px] font-mono uppercase tracking-wider">SEAT PROBABILITY</span>
-                      <strong className="text-[#CCFF00] truncate block text-[11px] font-black">
-                        {seatChance}% CHANCE
-                      </strong>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Row: Live Track Button */}
-                <div className="pt-1 flex items-center justify-between gap-3 border-t border-[#1C1C1C]">
-                  <span className="text-[11px] font-mono text-[#8E8E93]">
-                    SPEED: <strong className="text-white">{bus.speedKmh.toFixed(0)} KM/H</strong> •
-                    ETA: ~{Math.max(1, Math.round(bus.etaNextStopSec / 60))}M
+                {/* Header Row: Route & Status Pill */}
+                <div className="flex items-center justify-between gap-2">
+                  <span
+                    className="font-mono font-bold text-xs text-white truncate max-w-[240px]"
+                    title={routeHeadline}
+                  >
+                    {routeHeadline}
                   </span>
 
-                  <button
-                    type="button"
-                    onClick={() => onLiveTrackBus(bus.vehicleId)}
-                    className="px-4 py-1.5 bg-[#CCFF00] hover:bg-[#B8E600] text-black font-black text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm"
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider shrink-0 ${
+                      isOnTime
+                        ? 'bg-[#1b2b1e] text-[#4ade80] border border-[#2a4d31]'
+                        : 'bg-[#2b2413] text-[#f59e0b] border border-[#4d3d19]'
+                    }`}
                   >
-                    <Compass className="w-3.5 h-3.5 stroke-[2.5]" />
-                    <span>Live Track ↗</span>
-                  </button>
+                    {isOnTime ? 'on time' : `delayed +${delayMin}m`}
+                  </span>
                 </div>
+
+                {/* 3-Column Metrics Box */}
+                <div className="grid grid-cols-3 gap-2 bg-[#0c0f16] rounded-xl p-2.5 border border-[#1b2130] text-left">
+                  <div className="truncate">
+                    <span className="text-[8.5px] font-mono uppercase text-slate-400 block tracking-wider">
+                      NEXT STOP
+                    </span>
+                    <strong className="text-[11px] font-mono font-bold text-white truncate block">
+                      {bus.nextStopName}
+                    </strong>
+                  </div>
+
+                  <div className="truncate">
+                    <span className="text-[8.5px] font-mono uppercase text-slate-400 block tracking-wider">
+                      CROWD LOAD
+                    </span>
+                    <strong className="text-[11px] font-mono font-bold text-white truncate block">
+                      {occ}% • {crowdShort}
+                    </strong>
+                  </div>
+
+                  <div className="truncate">
+                    <span className="text-[8.5px] font-mono uppercase text-slate-400 block tracking-wider">
+                      SEAT PROB...
+                    </span>
+                    <strong className="text-[11px] font-mono font-bold text-white truncate block">
+                      {seatChance}% Chance
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Prominent Solid Neon Volt Live Track Button */}
+                <button
+                  type="button"
+                  onClick={() => onLiveTrackBus(bus.vehicleId)}
+                  className="w-full py-2.5 rounded-xl bg-[#CCFF00] hover:bg-[#bfe600] active:scale-[0.98] text-black font-sans font-black text-xs tracking-wider uppercase transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5 border border-black"
+                >
+                  <span>LIVE TRACK</span>
+                  <span className="font-mono text-sm font-black">↗</span>
+                </button>
               </div>
             );
           })
         )}
-      </div>
-
-      {/* Footer Info */}
-      <div className="p-3 border-t border-[#222222] bg-[#0A0A0A] flex items-center justify-between text-[11px] font-mono text-[#666666] shrink-0">
-        <span>
-          SHOWING <b className="text-white">{filteredBuses.length}</b> OF {buses.length} BUSES
-        </span>
-        <span className="text-[#CCFF00] font-bold">GPS AVLS STREAMING ACTIVE</span>
       </div>
     </div>
   );

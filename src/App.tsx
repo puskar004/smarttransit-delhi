@@ -7,7 +7,6 @@ import {
   Play,
   Route as RouteIcon,
   Search,
-  Sparkles,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AllBusesView } from './components/AllBusesView';
@@ -20,6 +19,7 @@ import { JourneyPlannerTab } from './components/JourneyPlannerTab';
 import { LiveBusTrackerHud } from './components/LiveBusTrackerHud';
 import { SegmentInspectorCard, StopPisCard } from './components/MapInspectors';
 import { QuickServicesBar } from './components/QuickServicesBar';
+import { Rotatable3DBusStage } from './components/Rotatable3DBusStage';
 import { TrafficModelTab } from './components/TrafficModelTab';
 import { UserProfileModal } from './components/UserProfileModal';
 import { DelhiTransitSimulator } from './engine/busSimulator';
@@ -42,12 +42,6 @@ import type {
 import { formatSimClock } from './utils/format';
 
 type AppPage = 'PLANNER' | 'ALL_BUSES' | 'TRAFFIC' | 'ABOUT';
-
-const TIME_SLOTS = [
-  { label: 'Morning Peak', hour: 9.0 },
-  { label: 'Afternoon', hour: 14.0 },
-  { label: 'Evening Rush', hour: 18.25 },
-];
 
 export function App() {
   // Commuter authentication state
@@ -84,7 +78,8 @@ export function App() {
   const [simHour, setSimHour] = useState<number>(() => simRef.current!.getSimHour());
 
   const [isPlaying, setIsPlaying] = useState(true);
-  const [page, setPage] = useState<AppPage>('PLANNER');
+  const [page, setPage] = useState<AppPage>('ALL_BUSES');
+  const [showMapInAllBuses, setShowMapInAllBuses] = useState(false);
 
   // Journey Planner State (Defaults to Okhla Phase-III -> AIIMS)
   const [originStopId, setOriginStopId] = useState('iiit_delhi');
@@ -185,15 +180,6 @@ export function App() {
     [syncFromEngine, showToast]
   );
 
-  const handleSetTimeSlot = useCallback(
-    (hour: number) => {
-      simRef.current!.setSimHour(hour);
-      simRef.current!.warmup(10, 4);
-      syncFromEngine();
-    },
-    [syncFromEngine]
-  );
-
   const handleIngestFileText = useCallback(
     (filename: string, text: string) => {
       try {
@@ -263,6 +249,7 @@ export function App() {
 
   const handleTrackBus = (vehicleId: string) => {
     setTrackedBusId(vehicleId);
+    setShowMapInAllBuses(true);
     const bus = buses.find((b) => b.vehicleId === vehicleId);
     if (bus) {
       showToast(`🎯 Live tracking Bus ${bus.routeShortName} (${bus.vehicleId}) on Delhi Map!`);
@@ -275,72 +262,48 @@ export function App() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#000000] text-white font-sans select-none">
-      {/* 1. TOP MARQUEE TICKER (SNKS Neon Volt Style) */}
-      <div className="bg-[#CCFF00] text-black font-mono font-black text-[10.5px] sm:text-xs py-1.5 px-4 sm:px-8 flex items-center justify-between tracking-wider uppercase shrink-0 border-b border-black select-none">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-black animate-ping" />
-          <span>⚡ LIVE DELHI TRANSIT STACK — REAL-TIME GPS BUS TRACKING</span>
-        </div>
-        <div className="hidden md:flex items-center gap-4 text-[10px]">
-          <span>72 ACTIVE ELECTRIC &amp; CNG BUSES</span>
-          <span>•</span>
-          <span>KALMAN DELAY MODEL</span>
-          <span>•</span>
-          <span>SEAT RADAR</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsApiGuideOpen(true)}
-          className="hover:underline flex items-center gap-1 font-black cursor-pointer"
-        >
-          <span>GET API ACCESS ↗</span>
-        </button>
-      </div>
-
-      {/* 2. BRUTALIST TOP NAVBAR (64px) */}
-      <header className="h-[64px] bg-[#000000] border-b border-[#222222] px-4 sm:px-8 flex items-center justify-between gap-3 shrink-0 z-30 text-white select-none">
-        {/* Brand Logo with Heavy Bold Grotesque Wordmark (SNKS Style) */}
-        <button
-          type="button"
-          onClick={() => {
-            setPage('PLANNER');
-            setTrackedBusId(null);
-          }}
-          className="flex items-center gap-2.5 cursor-pointer group shrink-0"
-        >
-          <div className="w-8 h-8 bg-[#CCFF00] text-black font-black flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.4)] group-hover:scale-105 transition-transform">
-            <Compass className="w-5 h-5 stroke-[2.5]" />
-          </div>
-          <div className="text-left">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-[#07090e] text-white font-sans select-none">
+      {/* 1. TOP NAVBAR (Exact Screenshot Header) */}
+      <header className="h-[62px] bg-[#0c0e14] border-b border-[#1c2232] px-4 sm:px-6 flex items-center justify-between gap-3 shrink-0 z-30 text-white select-none">
+        {/* Left: Neon Volt Rounded Square Logo + SMARTTRANSITAI + DELHI Pill */}
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setPage('ALL_BUSES');
+              setShowMapInAllBuses(false);
+              setTrackedBusId(null);
+            }}
+            className="flex items-center gap-2.5 cursor-pointer group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-[#CCFF00] text-black font-black flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.4)] group-hover:scale-105 transition-transform">
+              <Compass className="w-5 h-5 stroke-[2.5]" />
+            </div>
             <div className="flex items-center gap-1.5">
-              <span className="font-black text-[22px] tracking-tighter uppercase text-white leading-none">
-                SmartTransit<span className="text-[#CCFF00]">AI</span>
+              <span className="font-sans font-black text-lg sm:text-[19px] tracking-tight uppercase text-white leading-none">
+                SMARTTRANSIT<span className="text-[#CCFF00]">AI</span>
               </span>
-              <span className="hidden sm:inline-flex items-center px-1.5 py-0.2 text-[9px] font-mono font-bold tracking-wider uppercase bg-[#141414] text-[#CCFF00] border border-[#333333]">
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase bg-[#151923] text-slate-300 border border-[#252c3e]">
                 DELHI
               </span>
             </div>
-          </div>
-        </button>
+          </button>
 
-        {/* Global Bus & Route Search Bar */}
-        <button
-          type="button"
-          onClick={() => setIsSearchOpen(true)}
-          className="hidden md:flex items-center gap-2.5 px-4 py-2 bg-[#111111] hover:bg-[#161616] border border-[#262626] hover:border-[#CCFF00] text-left transition-all cursor-pointer w-60 lg:w-76 group"
-        >
-          <Search className="w-3.5 h-3.5 text-[#666666] group-hover:text-[#CCFF00] transition-colors" />
-          <span className="text-xs text-[#8E8E93] group-hover:text-white font-medium truncate">
-            Find your bus or stop (e.g. 534)...
-          </span>
-          <kbd className="hidden lg:inline text-[9px] font-mono bg-[#1A1A1A] px-1.5 py-0.5 text-[#8E8E93] ml-auto border border-[#333333] font-bold">
-            ⌘K
-          </kbd>
-        </button>
+          {/* Capsule Search Input: "Find your bus or stop..." */}
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen(true)}
+            className="hidden md:flex items-center gap-2.5 px-4 py-2 bg-[#121620] hover:bg-[#161c2b] border border-[#242c3e] hover:border-[#CCFF00] rounded-full text-left transition-all cursor-pointer w-52 lg:w-68 group ml-1"
+          >
+            <Search className="w-3.5 h-3.5 text-slate-500 group-hover:text-[#CCFF00] transition-colors" />
+            <span className="text-xs text-slate-400 group-hover:text-white font-medium truncate">
+              Find your bus or stop...
+            </span>
+          </button>
+        </div>
 
-        {/* 4 Main Navigation Tabs (SNKS Pill Container Style) */}
-        <nav className="flex items-center bg-[#111111] border border-[#262626] rounded-full p-1 gap-1">
+        {/* Center: 4 Navigation Tabs */}
+        <nav className="flex items-center bg-[#121620] border border-[#242c3e] rounded-full p-1 gap-1">
           {(
             [
               { id: 'PLANNER', label: 'JOURNEY PLANNER', icon: RouteIcon },
@@ -359,144 +322,85 @@ export function App() {
                   setPage(tab.id);
                   setSelectedSegmentId(null);
                   setSelectedStopId(null);
+                  if (tab.id === 'ALL_BUSES') {
+                    setShowMapInAllBuses(false);
+                  }
                 }}
-                className={`px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-[11px] font-mono font-black uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer ${
                   active
                     ? 'bg-[#CCFF00] text-black shadow-sm'
-                    : 'text-[#8E8E93] hover:text-white'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-3.5 h-3.5 stroke-[2.2]" />
                 <span className="hidden lg:inline">{tab.label}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* User Profile & Quick Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Mobile Search Button */}
+        {/* Right: User Profile Capsule (Neon Volt Circle R + Rahul Verma + DL-DTC-84920) */}
+        <div className="flex items-center gap-2">
+          {/* Mobile Search Icon */}
           <button
             type="button"
             onClick={() => setIsSearchOpen(true)}
-            className="md:hidden w-8 h-8 bg-[#111111] text-white hover:text-[#CCFF00] flex items-center justify-center border border-[#262626]"
+            className="md:hidden w-8 h-8 rounded-full bg-[#121620] text-slate-300 hover:text-[#CCFF00] flex items-center justify-center border border-[#242c3e]"
             title="Search Buses"
           >
             <Search className="w-4 h-4" />
           </button>
 
-          {/* Time of Day Slots */}
-          <div className="hidden xl:flex items-center bg-[#111111] border border-[#262626] p-0.5 gap-1">
-            {TIME_SLOTS.map((slot) => {
-              const isNear = Math.abs(simHour - slot.hour) < 1.3;
-              return (
-                <button
-                  key={slot.label}
-                  type="button"
-                  onClick={() => handleSetTimeSlot(slot.hour)}
-                  className={`px-2.5 py-1 text-[10px] font-mono font-bold uppercase transition-all cursor-pointer ${
-                    isNear
-                      ? 'bg-[#CCFF00] text-black'
-                      : 'text-[#8E8E93] hover:text-white'
-                  }`}
-                >
-                  {slot.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Clickable User Profile Pill */}
+          {/* User Profile Pill */}
           <button
             type="button"
             onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center gap-2 bg-[#111111] hover:bg-[#161616] border border-[#262626] hover:border-[#CCFF00] px-2.5 py-1 text-[11px] transition-all cursor-pointer group"
+            className="flex items-center gap-2.5 bg-[#121620] hover:bg-[#161c2b] border border-[#242c3e] hover:border-[#CCFF00] px-3 py-1 rounded-full text-xs transition-all cursor-pointer group"
             title="View Commuter Profile & Pass"
           >
-            <div className="w-6 h-6 bg-[#CCFF00] text-black flex items-center justify-center font-black text-xs">
-              {currentUser.name.charAt(0)}
+            <div className="w-6 h-6 rounded-full bg-[#CCFF00] text-black flex items-center justify-center font-black text-xs">
+              {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'R'}
             </div>
-            <div className="hidden sm:block text-left">
-              <div className="text-white group-hover:text-[#CCFF00] font-black uppercase text-[11px] leading-tight">
-                {currentUser.name}
-              </div>
-              <div className="text-[9px] text-[#8E8E93] font-mono font-bold leading-tight">
-                {currentUser.passId}
-              </div>
+            <div className="hidden sm:flex items-center gap-1.5 text-left font-mono">
+              <span className="text-white group-hover:text-[#CCFF00] font-bold text-xs leading-none">
+                {currentUser.name || 'Rahul Verma'}
+              </span>
+              <span className="text-[10px] text-slate-400 font-normal leading-none">
+                • {currentUser.passId || 'DL-DTC-84920'}
+              </span>
             </div>
           </button>
         </div>
       </header>
 
-      {/* COMMUTER SESSION BANNER */}
-      <div className="bg-[#0A0A0A] text-white px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3 border-b border-[#1F1F1F] shrink-0 font-mono">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-[#141414] border border-[#333333] text-[#CCFF00] text-[9.5px] font-black uppercase tracking-wider mb-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF00] animate-pulse"></span>
-            <span>DELHI TRANSIT STACK • LIVE SESSION</span>
-          </div>
-          <div className="text-xs sm:text-[13px] font-bold">
-            WELCOME, <span className="text-[#CCFF00] uppercase">{currentUser.name}</span>
-            <span className="text-[#8E8E93] font-normal text-xs ml-2 hidden sm:inline">
-              PASS: <strong className="text-white font-mono">{currentUser.passId}</strong> •
-              CORRIDOR: {currentUser.corridor || 'Okhla Phase-III ↔ AIIMS'}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => {
-              setPage('ALL_BUSES');
-              setIsSearchOpen(true);
-            }}
-            className="px-4 py-1.5 bg-[#CCFF00] hover:bg-[#B8E600] text-black font-black text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-          >
-            <Search className="w-3.5 h-3.5 stroke-[2.5]" />
-            <span>Search Buses &amp; Live Track ↗</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsProfileModalOpen(true)}
-            className="px-3.5 py-1.5 bg-[#111111] hover:bg-[#161616] text-white border border-[#262626] hover:border-[#CCFF00] text-xs font-mono font-bold uppercase inline-flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Compass className="w-3.5 h-3.5" />
-            <span>Profile / Pass</span>
-          </button>
-        </div>
-      </div>
-
-      {/* QUICK SERVICES DOCK (SmartLearn Pastel Palette) */}
+      {/* 2. SUBHEADER CAPSULE BAR (5 Pills matching Screenshot) */}
       <QuickServicesBar
         activeTab={page}
+        onOpenAllBuses={() => {
+          setPage('ALL_BUSES');
+          setShowMapInAllBuses(false);
+        }}
         onOpenPlanner={() => {
           setPage('PLANNER');
           setTrackedBusId(null);
         }}
-        onOpenLiveTrackSearch={() => {
-          setPage('ALL_BUSES');
-          setIsSearchOpen(true);
-        }}
         onOpenStopArrivals={() => {
           setSelectedStopId('iiit_delhi');
           setPage('TRAFFIC');
-          showToast('Opened Live Passenger Information System (PIS) for Okhla Ph-III stop.');
+          showToast('Opened Live Stop Arrivals for Okhla Ph-III stop.');
         }}
         onOpenCrowdRadar={() => {
           setPage('PLANNER');
           setPreference('COMFORT');
-          showToast('Switched to Crowd Radar & Comfort Mode (Problem 02).');
+          showToast('Switched to Crowd Radar & Comfort Routing.');
         }}
-        onOpenJamSimulator={() => {
+        onOpenTrafficDelay={() => {
           setPage('TRAFFIC');
           handleToggleIncident('inc_ashram');
         }}
-        onOpenApiGuide={() => setIsApiGuideOpen(true)}
       />
 
-      {/* BODY CONTENT */}
+      {/* 3. MAIN BODY CONTENT */}
       {page === 'ABOUT' ? (
         <HowItWorksView
           metrics={validationMetrics}
@@ -512,7 +416,7 @@ export function App() {
       ) : (
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
           {/* Left Panel */}
-          <aside className="w-full lg:w-[450px] h-[52vh] lg:h-full shrink-0 border-b lg:border-b-0 lg:border-r border-[#222736] bg-[#0B0C10] overflow-hidden z-20">
+          <aside className="w-full lg:w-[410px] xl:w-[440px] h-[52vh] lg:h-full shrink-0 border-b lg:border-b-0 lg:border-r border-[#1c2232] bg-[#0b0e14] overflow-hidden z-20">
             {page === 'PLANNER' ? (
               <JourneyPlannerTab
                 originStopId={originStopId}
@@ -557,126 +461,145 @@ export function App() {
             )}
           </aside>
 
-          {/* Map Main View */}
-          <main className="flex-1 relative min-h-[48vh] lg:min-h-0">
-            <DelhiMap
-              mode={page === 'ALL_BUSES' ? 'PLANNER' : page}
-              trafficStates={trafficStates}
-              buses={buses}
-              activeJourney={page === 'PLANNER' ? activeJourney : null}
-              originStopId={originStopId}
-              destinationStopId={destinationStopId}
-              selectedSegmentId={selectedSegmentId}
-              trackedBusId={trackedBusId}
-              onSelectSegment={(id) => {
-                setSelectedSegmentId(id);
-                setSelectedStopId(null);
-              }}
-              onSelectStop={(id) => {
-                setSelectedStopId(id);
-                setSelectedSegmentId(null);
-              }}
-              onSelectBus={(vehicleId) => {
-                handleTrackBus(vehicleId);
-              }}
-            />
-
-            {/* Floating Top Telemetry Pill */}
-            <div className="absolute top-4 left-4 z-[500] bg-[#0E0E0E]/95 backdrop-blur-md border border-[#262626] px-3.5 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.8)] flex items-center gap-2.5 text-[11.5px] font-mono">
-              <button
-                type="button"
-                onClick={() => setIsPlaying((p) => !p)}
-                title={isPlaying ? 'Pause telemetry' : 'Resume telemetry'}
-                className="w-6 h-6 bg-[#CCFF00] text-black flex items-center justify-center cursor-pointer shadow-[0_0_8px_rgba(204,255,0,0.6)] font-bold"
-              >
-                {isPlaying ? <Pause className="w-3 h-3 stroke-[3]" /> : <Play className="w-3 h-3 stroke-[3]" />}
-              </button>
-              <span className="font-bold text-white flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse shadow-[0_0_6px_#CCFF00]" />
-                {formatSimClock(simTimeMs)} IST
-              </span>
-              <span className="text-[#333333]">|</span>
-              <span className="text-[#8E8E93] text-[10.5px] uppercase font-bold hidden sm:inline">
-                {trackedBus
-                  ? `LIVE TRACKING BUS ${trackedBus.routeShortName} (${trackedBus.vehicleId})`
-                  : page === 'PLANNER'
-                    ? 'ROUTE BUSES & LIVE LOADS'
-                    : page === 'ALL_BUSES'
-                      ? '72 BUSES ACTIVE ON DELHI CORRIDORS'
-                      : `${buses.length} LIVE DELHI GPS SENSORS STREAMING`}
-              </span>
-            </div>
-
-            {/* LIVE BUS TRACKING FLOATING HUD */}
-            {trackedBus && (
-              <div className="absolute top-16 left-4 z-[520]">
-                <LiveBusTrackerHud
-                  bus={trackedBus}
+          {/* Right Main View: Rotatable 3D Bus Stage OR Interactive Delhi Map */}
+          <main className="flex-1 relative min-h-[48vh] lg:min-h-0 bg-[#0a0c10] overflow-hidden">
+            {page === 'ALL_BUSES' && !showMapInAllBuses ? (
+              <Rotatable3DBusStage
+                onOpenLiveMap={() => setShowMapInAllBuses(true)}
+                activeBusCount={buses.length}
+                gpsSyncPercent={98.4}
+              />
+            ) : (
+              <>
+                <DelhiMap
+                  mode={page === 'ALL_BUSES' ? 'PLANNER' : page}
                   trafficStates={trafficStates}
-                  onClose={() => setTrackedBusId(null)}
-                  onCenterOnBus={() => {
-                    setTrackedBusId(null);
-                    setTimeout(() => setTrackedBusId(trackedBus.vehicleId), 20);
+                  buses={buses}
+                  activeJourney={page === 'PLANNER' ? activeJourney : null}
+                  originStopId={originStopId}
+                  destinationStopId={destinationStopId}
+                  selectedSegmentId={selectedSegmentId}
+                  trackedBusId={trackedBusId}
+                  onSelectSegment={(id) => {
+                    setSelectedSegmentId(id);
+                    setSelectedStopId(null);
                   }}
-                  onSelectAnotherBus={() => setIsSearchOpen(true)}
+                  onSelectStop={(id) => {
+                    setSelectedStopId(id);
+                    setSelectedSegmentId(null);
+                  }}
+                  onSelectBus={(vehicleId) => {
+                    handleTrackBus(vehicleId);
+                  }}
                 />
-              </div>
+
+                {/* If in ALL_BUSES and viewing map, provide easy button to toggle back to 3D Bus Stage */}
+                {page === 'ALL_BUSES' && showMapInAllBuses && (
+                  <button
+                    type="button"
+                    onClick={() => setShowMapInAllBuses(false)}
+                    className="absolute top-4 right-4 z-[500] px-4 py-2 rounded-full bg-[#121620]/95 backdrop-blur-md border border-[#262c3e] hover:border-[#CCFF00] text-[#CCFF00] font-mono font-bold text-xs flex items-center gap-2 cursor-pointer shadow-xl transition-all"
+                  >
+                    <span>VIEW 3D ROTATABLE BUS ↺</span>
+                  </button>
+                )}
+
+                {/* Floating Top Telemetry Pill */}
+                <div className="absolute top-4 left-4 z-[500] bg-[#121620]/95 backdrop-blur-md border border-[#262c3e] rounded-full px-3.5 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.8)] flex items-center gap-2.5 text-[11.5px] font-mono">
+                  <button
+                    type="button"
+                    onClick={() => setIsPlaying((p) => !p)}
+                    title={isPlaying ? 'Pause telemetry' : 'Resume telemetry'}
+                    className="w-5 h-5 rounded-full bg-[#CCFF00] text-black flex items-center justify-center cursor-pointer shadow-[0_0_8px_rgba(204,255,0,0.6)] font-bold"
+                  >
+                    {isPlaying ? <Pause className="w-2.5 h-2.5 stroke-[3]" /> : <Play className="w-2.5 h-2.5 stroke-[3]" />}
+                  </button>
+                  <span className="font-bold text-white flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse shadow-[0_0_6px_#CCFF00]" />
+                    {formatSimClock(simTimeMs)} IST
+                  </span>
+                  <span className="text-slate-600">|</span>
+                  <span className="text-slate-300 text-[10.5px] uppercase font-bold hidden sm:inline">
+                    {trackedBus
+                      ? `LIVE TRACKING BUS ${trackedBus.routeShortName} (${trackedBus.vehicleId})`
+                      : page === 'PLANNER'
+                        ? 'ROUTE BUSES & LIVE LOADS'
+                        : page === 'ALL_BUSES'
+                          ? '72 BUSES ACTIVE ON DELHI CORRIDORS'
+                          : `${buses.length} LIVE DELHI GPS SENSORS STREAMING`}
+                  </span>
+                </div>
+
+                {/* LIVE BUS TRACKING FLOATING HUD */}
+                {trackedBus && (
+                  <div className="absolute top-16 left-4 z-[520]">
+                    <LiveBusTrackerHud
+                      bus={trackedBus}
+                      trafficStates={trafficStates}
+                      onClose={() => setTrackedBusId(null)}
+                      onCenterOnBus={() => {
+                        setTrackedBusId(null);
+                        setTimeout(() => setTrackedBusId(trackedBus.vehicleId), 20);
+                      }}
+                      onSelectAnotherBus={() => setIsSearchOpen(true)}
+                    />
+                  </div>
+                )}
+
+                {/* Floating Inspector Card */}
+                <div className="absolute bottom-4 right-4 z-[510]">
+                  {selectedSegmentId && trafficStates[selectedSegmentId] && (
+                    <SegmentInspectorCard
+                      segmentId={selectedSegmentId}
+                      state={trafficStates[selectedSegmentId]}
+                      simHour={simHour}
+                      onClose={() => setSelectedSegmentId(null)}
+                    />
+                  )}
+
+                  {selectedStopId && (
+                    <StopPisCard
+                      stopId={selectedStopId}
+                      buses={buses}
+                      trafficStates={trafficStates}
+                      onSetOrigin={(id) => {
+                        setOriginStopId(id);
+                        setPage('PLANNER');
+                        setSelectedStopId(null);
+                      }}
+                      onSetDestination={(id) => {
+                        setDestinationStopId(id);
+                        setPage('PLANNER');
+                        setSelectedStopId(null);
+                      }}
+                      onClose={() => setSelectedStopId(null)}
+                    />
+                  )}
+                </div>
+
+                {/* Bottom-Left Traffic & Crowd Legend */}
+                <div className="absolute bottom-4 left-4 z-[500] bg-[#121620]/95 backdrop-blur-md border border-[#262c3e] rounded-full px-3.5 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.8)] flex items-center gap-3 text-[10.5px] font-mono font-bold text-slate-400 uppercase">
+                  <span className="text-white">CROWD:</span>
+                  <span className="inline-flex items-center gap-1 text-[#CCFF00]">
+                    <span className="w-2 h-2 rounded-full bg-[#CCFF00] shadow-[0_0_6px_#CCFF00]" /> LOW
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[#FFB800]">
+                    <span className="w-2 h-2 rounded-full bg-[#FFB800]" /> MODERATE
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-white">
+                    <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_6px_white]" /> HEAVY
+                  </span>
+                </div>
+              </>
             )}
 
             {/* Toast Notification */}
             {toastMsg && (
-              <div className="absolute top-4 right-4 z-[520] bg-[#0E0E0E] text-white text-[12px] font-mono font-bold px-4 py-2.5 shadow-2xl border border-[#CCFF00] max-w-md animate-in fade-in duration-200 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#CCFF00]" />
+              <div className="absolute top-4 right-4 z-[520] bg-[#121620] text-white text-[12px] font-mono font-bold px-4 py-2.5 rounded-full shadow-2xl border border-[#CCFF00] max-w-md animate-in fade-in duration-200 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse" />
                 <span>{toastMsg}</span>
               </div>
             )}
-
-            {/* Bottom-Left Traffic & Crowd Legend (NO RED!) */}
-            <div className="absolute bottom-4 left-4 z-[500] bg-[#0E0E0E]/95 backdrop-blur-md border border-[#262626] px-3.5 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.8)] flex items-center gap-3 text-[10.5px] font-mono font-bold text-[#8E8E93] uppercase">
-              <span className="text-white inline-flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-[#CCFF00]" /> CROWD:
-              </span>
-              <span className="inline-flex items-center gap-1 text-[#CCFF00]">
-                <span className="w-2 h-2 rounded-full bg-[#CCFF00] shadow-[0_0_6px_#CCFF00]" /> LOW
-              </span>
-              <span className="inline-flex items-center gap-1 text-[#FFB800]">
-                <span className="w-2 h-2 rounded-full bg-[#FFB800]" /> MODERATE
-              </span>
-              <span className="inline-flex items-center gap-1 text-white">
-                <span className="w-2 h-2 rounded-full bg-white shadow-[0_0_6px_white]" /> HEAVY LOAD
-              </span>
-            </div>
-
-            {/* Floating Inspector Card */}
-            <div className="absolute bottom-4 right-4 z-[510]">
-              {selectedSegmentId && trafficStates[selectedSegmentId] && (
-                <SegmentInspectorCard
-                  segmentId={selectedSegmentId}
-                  state={trafficStates[selectedSegmentId]}
-                  simHour={simHour}
-                  onClose={() => setSelectedSegmentId(null)}
-                />
-              )}
-
-              {selectedStopId && (
-                <StopPisCard
-                  stopId={selectedStopId}
-                  buses={buses}
-                  trafficStates={trafficStates}
-                  onSetOrigin={(id) => {
-                    setOriginStopId(id);
-                    setPage('PLANNER');
-                    setSelectedStopId(null);
-                  }}
-                  onSetDestination={(id) => {
-                    setDestinationStopId(id);
-                    setPage('PLANNER');
-                    setSelectedStopId(null);
-                  }}
-                  onClose={() => setSelectedStopId(null)}
-                />
-              )}
-            </div>
           </main>
         </div>
       )}
