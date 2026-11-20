@@ -90,7 +90,7 @@ export function HowItWorksView({
                 `${busCount} Live Delhi Buses Tracked`,
                 'ETM Crowdedness AI Model',
                 'Comfort vs Speed Trade-off',
-                'Zero API Key Needed to Demo',
+                'Live Citywide Data Stream',
               ].map((pill) => (
                 <span
                   key={pill}

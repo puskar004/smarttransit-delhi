@@ -406,14 +406,6 @@ export function App() {
             })}
           </div>
 
-          {/* Wallet / Pass Pill (Matches BAG 0 from SNKS screenshot) */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-[#111111] border border-[#262626] text-xs font-mono font-bold text-white">
-            <span className="text-[#8E8E93]">WALLET</span>
-            <span className="bg-[#CCFF00] text-black font-black px-1.5 py-0.2 rounded-full text-[10.5px]">
-              ₹ 58.78
-            </span>
-          </div>
-
           {/* Clickable User Profile Pill */}
           <button
             type="button"

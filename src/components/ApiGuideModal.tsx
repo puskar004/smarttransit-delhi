@@ -85,7 +85,7 @@ export function ApiGuideModal({
           <div className="p-4 rounded-2xl bg-[#10B981]/10 border border-[#10B981]/30 space-y-2">
             <div className="flex items-center gap-2 text-[#10B981] font-bold text-[13px]">
               <CheckCircle2 className="w-4 h-4" />
-              <span>Prototype Demo ke liye API Key ki zarurat nahi hai! (Built-In Engine)</span>
+              <span>Live GPS Simulation ke liye API Key ki zarurat nahi hai! (Built-In Engine)</span>
             </div>
             <p className="text-[12px] text-[#94A3B8] leading-relaxed">
               Humare is prototype me <b>Delhi Transit Engine</b> pehle se integrated hai! Ye real-time

@@ -2,9 +2,9 @@ import {
   Compass,
   LogOut,
   QrCode,
+  ShieldCheck,
   Ticket,
   User,
-  Wallet,
   X,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -89,8 +89,8 @@ export function UserProfileModal({
                   CORRIDOR: <b className="text-white uppercase">{currentUser.corridor || 'Okhla Ph-III ↔ AIIMS'}</b>
                 </span>
                 <span className="flex items-center gap-1 bg-[#0A0A0A] px-2 py-0.5 border border-[#262626]">
-                  <Wallet className="w-3.5 h-3.5 text-[#CCFF00]" />
-                  WALLET: <b className="text-[#CCFF00]">₹58.78</b>
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#CCFF00]" />
+                  STATUS: <b className="text-[#CCFF00]">VERIFIED ACTIVE</b>
                 </span>
               </div>
             </div>
@@ -182,8 +182,8 @@ export function UserProfileModal({
                     <strong className="text-[#CCFF00]">SEATS &amp; COMFORT</strong>
                   </div>
                   <div className="flex justify-between pt-1">
-                    <span>AVAILABLE WALLET:</span>
-                    <strong className="text-lg font-black text-[#CCFF00]">₹58.78</strong>
+                    <span>CORRIDOR ACCESS:</span>
+                    <strong className="text-sm font-black text-[#CCFF00]">ALL-DELHI ROUTES</strong>
                   </div>
                 </div>
               </div>
