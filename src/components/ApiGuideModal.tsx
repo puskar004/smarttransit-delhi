@@ -181,7 +181,7 @@ export function ApiGuideModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-lg bg-[#E50914] text-white font-bold cursor-pointer hover:bg-[#B80710]"
+            className="px-4 py-1.5 bg-[#CCFF00] text-black font-black uppercase text-xs cursor-pointer hover:bg-[#B8E600]"
           >
             Got It!
           </button>

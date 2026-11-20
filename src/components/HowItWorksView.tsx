@@ -65,15 +65,15 @@ export function HowItWorksView({
       <section className="relative overflow-hidden bg-gradient-to-b from-[#181B26] via-[#11131B] to-[#0B0C10] border-b border-[#222736]">
         <div className="max-w-5xl mx-auto px-6 py-14 grid lg:grid-cols-12 gap-8 items-center">
           <div className="lg:col-span-7 space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E50914]/20 border border-[#E50914]/40 text-[#FF5A65] text-[11px] font-black tracking-widest uppercase">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#CCFF00] text-black text-[10.5px] font-black tracking-widest uppercase">
               <Zap className="w-3.5 h-3.5 fill-current" />
               DELHI TRANSPORT STACK · REAL-TIME TRANSIT INTELLIGENCE
             </div>
 
-            <h1 className="text-[38px] sm:text-[46px] font-black leading-[1.08] tracking-tight text-white">
+            <h1 className="text-[38px] sm:text-[46px] font-black leading-[1.08] tracking-tight text-white uppercase">
               SmartTransit AI.
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00E5FF] to-[#10B981]">
+              <span className="text-[#CCFF00]">
                 Comfort vs Speed
               </span>{' '}
               Solved.
@@ -105,15 +105,15 @@ export function HowItWorksView({
               <button
                 type="button"
                 onClick={onGoToPlanner}
-                className="px-6 py-3 rounded-xl bg-[#E50914] hover:bg-[#B80710] text-white font-extrabold text-[13.5px] inline-flex items-center gap-2 shadow-[0_0_25px_rgba(229,9,20,0.5)] transition-all cursor-pointer"
+                className="px-6 py-3 bg-[#CCFF00] hover:bg-[#B8E600] text-black font-black text-[13px] uppercase tracking-wider inline-flex items-center gap-2 shadow-[0_0_20px_rgba(204,255,0,0.35)] transition-all cursor-pointer"
               >
                 Launch AI Planner
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
               </button>
               <button
                 type="button"
                 onClick={onGoToTraffic}
-                className="px-5 py-3 rounded-xl bg-[#1A1E2B] hover:bg-[#252B3D] text-white font-bold text-[13.5px] border border-[#30374D] transition-all cursor-pointer"
+                className="px-5 py-3 bg-[#111111] hover:bg-[#1A1A1A] text-white font-bold text-[13px] uppercase tracking-wider border border-[#333333] transition-all cursor-pointer"
               >
                 Open Delhi Traffic Radar
               </button>
@@ -147,25 +147,25 @@ export function HowItWorksView({
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11.5px]">
                     <span className="text-[#94A3B8]">Static GTFS Timetable Error</span>
-                    <span className="font-mono-tabular font-bold text-[#F87171]">
+                    <span className="font-mono-tabular font-bold text-[#FFB800]">
                       ±{metrics.staticGtfsMaeSec.toFixed(0)}s
                     </span>
                   </div>
                   <div className="h-2 bg-[#252B3B] rounded-full overflow-hidden">
-                    <div className="h-full bg-[#EF4444] rounded-full w-full" />
+                    <div className="h-full bg-[#FFB800] rounded-full w-full" />
                   </div>
                 </div>
 
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11.5px]">
                     <span className="font-bold text-[#00E5FF]">SmartTransit AI Fusion Model</span>
-                    <span className="font-mono-tabular font-bold text-[#10B981]">
+                    <span className="font-mono-tabular font-bold text-[#CCFF00]">
                       ±{metrics.pravaahMaeSec.toFixed(0)}s
                     </span>
                   </div>
                   <div className="h-2 bg-[#252B3B] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#10B981] rounded-full transition-all duration-500 shadow-[0_0_10px_#10B981]"
+                      className="h-full bg-[#CCFF00] rounded-full transition-all duration-500 shadow-[0_0_10px_#CCFF00]"
                       style={{ width: `${pravaahBarPct}%` }}
                     />
                   </div>
@@ -183,7 +183,7 @@ export function HowItWorksView({
       {/* Netflix-Style Feature Grid: 4 Core Pillars */}
       <section className="max-w-5xl mx-auto px-6 py-12 space-y-8">
         <div>
-          <span className="text-[11px] font-black uppercase tracking-widest text-[#E50914]">
+          <span className="text-[11px] font-black uppercase tracking-widest text-[#CCFF00]">
             CORE ARCHITECTURE &amp; DELIVERABLES
           </span>
           <h2 className="text-[26px] font-extrabold text-white mt-1">
@@ -261,7 +261,7 @@ export function HowItWorksView({
               <h4 className="text-[14px] font-bold text-white">How to connect official datasets:</h4>
               <ol className="space-y-3 text-[12.5px] text-[#CBD5E1]">
                 <li className="flex gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#E50914] text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-5 h-5 bg-[#CCFF00] text-black font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                     1
                   </span>
                   <span>
@@ -269,7 +269,7 @@ export function HowItWorksView({
                   </span>
                 </li>
                 <li className="flex gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#E50914] text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-5 h-5 bg-[#CCFF00] text-black font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                     2
                   </span>
                   <span>
@@ -277,7 +277,7 @@ export function HowItWorksView({
                   </span>
                 </li>
                 <li className="flex gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#E50914] text-white font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="w-5 h-5 bg-[#CCFF00] text-black font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">
                     3
                   </span>
                   <span>
@@ -323,7 +323,7 @@ export function HowItWorksView({
                 <button
                   type="button"
                   onClick={onRunSampleCsv}
-                  className="h-9.5 px-3 rounded-xl bg-[#E50914] hover:bg-[#B80710] text-white text-[12px] font-bold inline-flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(229,9,20,0.35)] cursor-pointer"
+                  className="h-9.5 px-3 bg-[#CCFF00] hover:bg-[#B8E600] text-black text-[12px] font-black uppercase tracking-wider inline-flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(204,255,0,0.35)] cursor-pointer"
                 >
                   <Radio className="w-3.5 h-3.5" />
                   Run Sample Trace

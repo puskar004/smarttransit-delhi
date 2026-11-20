@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Clock,
   Compass,
-  Filter,
   Navigation,
   Search,
   Sparkles,
@@ -12,7 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { DELHI_ROUTES, OPERATOR_META, STOP_BY_ID } from '../data/delhiNetwork';
+import { DELHI_ROUTES, STOP_BY_ID } from '../data/delhiNetwork';
 import type { SimulatedBus } from '../types/transit';
 
 interface AllBusesViewProps {
@@ -76,65 +75,39 @@ export function AllBusesView({
   );
 
   return (
-    <div className="h-full flex flex-col bg-[#0F131F] text-white overflow-hidden">
-      {/* Top Header */}
-      <div className="p-4 sm:p-5 border-b border-[#202738] bg-[#141926] space-y-3 shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10.5px] font-bold uppercase tracking-wider mb-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>LIVE AVLS GPS TELEMETRY</span>
-            </div>
-            <h2 className="text-lg sm:text-xl font-black text-white leading-tight">
-              All Available Delhi Buses
-            </h2>
-            <p className="text-xs text-slate-400">
-              Live punctuality, delay in minutes, crowd occupancy &amp; 1-click live tracking
-            </p>
+    <div className="h-full flex flex-col bg-[#000000] text-white overflow-hidden font-sans select-none">
+      {/* Editorial Streetwear Style Header */}
+      <div className="p-4 sm:p-6 border-b border-[#222222] bg-[#0A0A0A] space-y-4 shrink-0">
+        <div>
+          <div className="text-[11px] font-mono font-bold tracking-widest text-[#CCFF00] uppercase mb-1 flex items-center gap-2">
+            <span>THE FULL FLEET ROTATION / 072</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF00] animate-pulse" />
           </div>
-
-          <button
-            type="button"
-            onClick={onGoToPlanner}
-            className="px-3 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/30 text-blue-400 text-xs font-bold transition-all cursor-pointer hidden sm:inline-flex items-center gap-1.5"
-          >
-            <span>Plan Route →</span>
-          </button>
-        </div>
-
-        {/* Quick Search Bar */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by bus number (e.g. 534, 429, 764) or stop name..."
-            className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-[#1B2133] border border-[#2B3550] focus:border-[#38BDF8] focus:bg-[#20273D] text-xs sm:text-sm text-white placeholder:text-slate-400 transition-all outline-none"
-          />
-          {searchQuery && (
+          <div className="flex items-baseline justify-between flex-wrap gap-2">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tighter text-white">
+              ALL THE BUSES.
+            </h1>
             <button
               type="button"
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+              onClick={onGoToPlanner}
+              className="px-3.5 py-1.5 border border-[#333333] hover:border-[#CCFF00] bg-[#111111] hover:text-[#CCFF00] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer inline-flex items-center gap-1.5"
             >
-              <X className="w-3.5 h-3.5" />
+              <span>Plan Journey ↗</span>
             </button>
-          )}
+          </div>
+          <p className="text-xs text-[#8E8E93] mt-1 max-w-xl">
+            Delhi live AVLS GPS tracking. Real-time delay model and crowd telemetry for every active corridor.
+          </p>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs font-bold">
-          <span className="text-slate-400 flex items-center gap-1 text-[11px] shrink-0 mr-1">
-            <Filter className="w-3 h-3" /> Filter:
-          </span>
-
+        {/* Filter Pills — Exact SNKS "ALL BRANDS" Style */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
           {[
-            { id: 'ALL', label: `All Buses (${buses.length})` },
-            { id: 'ON_TIME', label: `🟢 On Time (${onTimeCount})` },
-            { id: 'DELAYED', label: `🔴 Delayed (${delayedCount})` },
-            { id: 'SEATS_FREE', label: `💺 Seats Free (${seatsFreeCount})` },
-            { id: 'ELECTRIC', label: '⚡ DTC Electric' },
+            { id: 'ALL', label: `ALL BUSES (${buses.length})` },
+            { id: 'ON_TIME', label: `ON TIME (${onTimeCount})` },
+            { id: 'DELAYED', label: `DELAYED (${delayedCount})` },
+            { id: 'SEATS_FREE', label: `SEATS FREE (${seatsFreeCount})` },
+            { id: 'ELECTRIC', label: 'AC ELECTRIC' },
           ].map((f) => {
             const active = activeFilter === f.id;
             return (
@@ -142,10 +115,10 @@ export function AllBusesView({
                 key={f.id}
                 type="button"
                 onClick={() => setActiveFilter(f.id as FilterOption)}
-                className={`px-2.5 py-1 rounded-lg whitespace-nowrap transition-all cursor-pointer text-[11px] ${
+                className={`px-3.5 py-1.5 uppercase font-black tracking-wider text-[11px] transition-all cursor-pointer whitespace-nowrap border ${
                   active
-                    ? 'bg-[#1D54B5] text-white shadow-sm'
-                    : 'bg-[#1A2033] text-slate-300 hover:bg-[#222B45] border border-[#2B3552]'
+                    ? 'bg-[#CCFF00] text-black border-[#CCFF00] shadow-[0_0_15px_rgba(204,255,0,0.3)]'
+                    : 'bg-[#111111] text-[#8E8E93] hover:text-white border-[#262626] hover:border-[#444444]'
                 }`}
               >
                 {f.label}
@@ -153,23 +126,47 @@ export function AllBusesView({
             );
           })}
         </div>
+
+        {/* Search Bar & Secondary Controls (Find your pair aesthetic) */}
+        <div className="flex items-center gap-2 pt-1 border-t border-[#1C1C1C]">
+          <div className="relative flex-1">
+            <Search className="w-3.5 h-3.5 text-[#666666] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Find your route or stop (e.g. 534, 429, Okhla)..."
+              className="w-full pl-9 pr-9 py-2 bg-[#111111] border border-[#262626] focus:border-[#CCFF00] text-xs text-white placeholder:text-[#555555] transition-all outline-none font-medium"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666666] hover:text-white"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+          <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-[#111111] border border-[#262626] text-[11px] font-mono text-[#8E8E93] whitespace-nowrap">
+            <span className="text-[#CCFF00] font-bold">{filteredBuses.length}</span> BUSES SHOWN
+          </div>
+        </div>
       </div>
 
-      {/* List of Buses */}
+      {/* Bus Cards Grid / Stream */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
         {filteredBuses.length === 0 ? (
-          <div className="py-12 text-center text-slate-400 space-y-2">
-            <Bus className="w-10 h-10 mx-auto text-slate-600 stroke-[1.5]" />
-            <p className="text-sm font-bold text-white">No buses found matching "{searchQuery}"</p>
-            <p className="text-xs text-slate-500">
-              Try searching for bus numbers like <b className="text-cyan-400">534</b> or{' '}
-              <b className="text-cyan-400">429</b>.
+          <div className="py-16 text-center text-[#666666] space-y-2">
+            <Bus className="w-10 h-10 mx-auto text-[#333333] stroke-[1.5]" />
+            <p className="text-sm font-bold uppercase tracking-wider text-white">No buses found</p>
+            <p className="text-xs text-[#666666]">
+              Try searching for bus numbers like <b className="text-[#CCFF00]">534</b> or <b className="text-[#CCFF00]">429</b>.
             </p>
           </div>
         ) : (
-          filteredBuses.map((bus) => {
+          filteredBuses.map((bus, idx) => {
             const routeMeta = DELHI_ROUTES.find((r) => r.shortName === bus.routeShortName);
-            const opMeta = OPERATOR_META[bus.operator];
             const occ = Math.round(((bus.passengersEst ?? 30) / 60) * 100);
             const delaySec = bus.delayVsScheduleSec;
             const delayMin = Math.round(Math.abs(delaySec) / 60);
@@ -177,117 +174,118 @@ export function AllBusesView({
             const isDelayed = delaySec > 60;
 
             const crowdLabel =
-              occ < 40 ? 'Low Crowd · Seats Free' : occ < 75 ? 'Moderate' : 'High Crowd · Standing Only';
-            const crowdColor = occ < 40 ? '#10B981' : occ < 75 ? '#F59E0B' : '#E50914';
+              occ < 40 ? 'LOW CROWD · SEATS FREE' : occ < 75 ? 'MODERATE LOAD' : 'HIGH LOAD · STANDING';
             const seatChance = Math.max(5, Math.min(98, 100 - Math.round(occ * 0.95)));
+            const indexStr = String(idx + 1).padStart(2, '0');
 
             return (
               <div
                 key={bus.vehicleId}
-                className="bg-[#141926] hover:bg-[#1A2031] border border-[#232B40] hover:border-[#38BDF8]/60 rounded-2xl p-3.5 sm:p-4 transition-all shadow-sm space-y-2.5"
+                className="bg-[#0E0E0E] hover:bg-[#141414] border border-[#222222] hover:border-[#CCFF00] p-4 transition-all duration-150 space-y-3 group"
               >
-                {/* Top Row: Route Badge & Punctuality Status */}
+                {/* Header Row: Route, Status Badge, Monospace Index */}
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <span
-                      className="px-2.5 py-0.5 rounded-lg font-black text-xs"
-                      style={{
-                        backgroundColor: `${opMeta.color}20`,
-                        color: opMeta.color,
-                        border: `1.5px solid ${opMeta.color}`,
-                      }}
-                    >
+                    {/* Route Badge */}
+                    <span className="px-2.5 py-0.5 bg-[#CCFF00] text-black font-black text-xs uppercase tracking-wider border border-[#CCFF00]">
                       BUS {bus.routeShortName}
                     </span>
-                    <span className="font-mono text-xs font-bold text-slate-300">
+                    <span className="font-mono text-xs font-bold text-[#8E8E93]">
                       {bus.vehicleId}
                     </span>
                     {bus.operator === 'DTC_ELECTRIC' && (
-                      <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 text-[9.5px] font-bold border border-emerald-500/30">
-                        ⚡ Electric AC
+                      <span className="px-1.5 py-0.5 bg-[#1A1A1A] text-[#CCFF00] text-[10px] font-mono font-bold border border-[#333333] uppercase">
+                        ⚡ ELECTRIC
                       </span>
                     )}
                   </div>
 
-                  {/* Punctuality Badge (Super prominent user requirement) */}
-                  <span
-                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 ${
-                      isOnTime
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                        : isDelayed
-                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                          : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                    }`}
-                  >
-                    {isOnTime ? (
-                      <>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>On Time (+0m)</span>
-                      </>
-                    ) : isDelayed ? (
-                      <>
-                        <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Delayed {delayMin} min</span>
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="w-3.5 h-3.5 text-amber-400" />
-                        <span>{delayMin}m Early</span>
-                      </>
-                    )}
-                  </span>
+                  {/* Punctuality Badge (SNKS Discount Tag style: NO RED!) */}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[11px] font-black uppercase tracking-wider px-2 py-0.5 inline-flex items-center gap-1 ${
+                        isOnTime
+                          ? 'bg-[#CCFF00] text-black border border-[#CCFF00]'
+                          : isDelayed
+                            ? 'bg-[#FFB800] text-black border border-[#FFB800]'
+                            : 'bg-white text-black border border-white'
+                      }`}
+                    >
+                      {isOnTime ? (
+                        <>
+                          <CheckCircle2 className="w-3 h-3 text-black stroke-[3]" />
+                          <span>ON TIME (+0M)</span>
+                        </>
+                      ) : isDelayed ? (
+                        <>
+                          <AlertTriangle className="w-3 h-3 text-black stroke-[3]" />
+                          <span>DELAYED +{delayMin}M</span>
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="w-3 h-3 text-black stroke-[3]" />
+                          <span>{delayMin}M EARLY</span>
+                        </>
+                      )}
+                    </span>
+
+                    {/* Numerical Index (like 01, 02 in SNKS template) */}
+                    <span className="font-mono text-xs text-[#555555] font-bold">
+                      /{indexStr}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Corridor Route Name */}
-                <div className="text-xs text-slate-200 font-semibold truncate">
+                <div className="text-xs text-[#E1E1E6] font-semibold truncate uppercase tracking-wide">
                   {routeMeta?.longName ?? `Delhi Corridor ${bus.routeShortName}`}
                 </div>
 
                 {/* Metrics Row: Next Stop, Speed, Crowd Meter */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
-                  <div className="bg-[#1C2235] p-2 rounded-xl border border-[#26314D] flex items-center gap-1.5">
-                    <Navigation className="w-3.5 h-3.5 text-[#38BDF8] shrink-0" />
+                  <div className="bg-[#141414] p-2.5 border border-[#222222] flex items-center gap-2">
+                    <Navigation className="w-3.5 h-3.5 text-[#CCFF00] shrink-0" />
                     <div className="truncate">
-                      <span className="text-slate-400 block text-[9.5px]">NEXT STOP</span>
-                      <strong className="text-white truncate block">{bus.nextStopName}</strong>
+                      <span className="text-[#666666] block text-[9px] font-mono uppercase tracking-wider">NEXT STOP</span>
+                      <strong className="text-white truncate block text-[11px]">{bus.nextStopName}</strong>
                     </div>
                   </div>
 
-                  <div className="bg-[#1C2235] p-2 rounded-xl border border-[#26314D] flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 shrink-0" style={{ color: crowdColor }} />
+                  <div className="bg-[#141414] p-2.5 border border-[#222222] flex items-center gap-2">
+                    <Users className="w-3.5 h-3.5 text-[#CCFF00] shrink-0" />
                     <div className="truncate">
-                      <span className="text-slate-400 block text-[9.5px]">CROWD LOAD</span>
-                      <strong style={{ color: crowdColor }} className="truncate block font-bold">
+                      <span className="text-[#666666] block text-[9px] font-mono uppercase tracking-wider">CROWD LOAD</span>
+                      <strong className="text-white truncate block text-[11px] font-bold">
                         {occ}% · {crowdLabel}
                       </strong>
                     </div>
                   </div>
 
-                  <div className="bg-[#1C2235] p-2 rounded-xl border border-[#26314D] flex items-center gap-1.5 col-span-2 sm:col-span-1">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <div className="bg-[#141414] p-2.5 border border-[#222222] flex items-center gap-2 col-span-2 sm:col-span-1">
+                    <Sparkles className="w-3.5 h-3.5 text-[#CCFF00] shrink-0" />
                     <div className="truncate">
-                      <span className="text-slate-400 block text-[9.5px]">SEAT CHANCE</span>
-                      <strong className="text-emerald-400 truncate block">
-                        {seatChance}% Probability
+                      <span className="text-[#666666] block text-[9px] font-mono uppercase tracking-wider">SEAT PROBABILITY</span>
+                      <strong className="text-[#CCFF00] truncate block text-[11px] font-black">
+                        {seatChance}% CHANCE
                       </strong>
                     </div>
                   </div>
                 </div>
 
                 {/* Action Row: Live Track Button */}
-                <div className="pt-1 flex items-center justify-between gap-3">
-                  <span className="text-[11px] font-mono text-slate-400">
-                    Live Speed: <strong className="text-white">{bus.speedKmh.toFixed(0)} km/h</strong> •
-                    ETA: ~{Math.max(1, Math.round(bus.etaNextStopSec / 60))}m
+                <div className="pt-1 flex items-center justify-between gap-3 border-t border-[#1C1C1C]">
+                  <span className="text-[11px] font-mono text-[#8E8E93]">
+                    SPEED: <strong className="text-white">{bus.speedKmh.toFixed(0)} KM/H</strong> •
+                    ETA: ~{Math.max(1, Math.round(bus.etaNextStopSec / 60))}M
                   </span>
 
                   <button
                     type="button"
                     onClick={() => onLiveTrackBus(bus.vehicleId)}
-                    className="px-4 py-2 rounded-xl bg-[#F26419] hover:bg-[#E05309] text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition-all cursor-pointer shrink-0"
+                    className="px-4 py-1.5 bg-[#CCFF00] hover:bg-[#B8E600] text-black font-black text-xs uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm"
                   >
-                    <Compass className="w-3.5 h-3.5" />
-                    <span>Live Track on Map</span>
+                    <Compass className="w-3.5 h-3.5 stroke-[2.5]" />
+                    <span>Live Track ↗</span>
                   </button>
                 </div>
               </div>
@@ -297,11 +295,11 @@ export function AllBusesView({
       </div>
 
       {/* Footer Info */}
-      <div className="p-3 border-t border-[#202738] bg-[#141926] flex items-center justify-between text-[11px] text-slate-400 shrink-0">
+      <div className="p-3 border-t border-[#222222] bg-[#0A0A0A] flex items-center justify-between text-[11px] font-mono text-[#666666] shrink-0">
         <span>
-          Showing <b>{filteredBuses.length}</b> buses in Delhi
+          SHOWING <b className="text-white">{filteredBuses.length}</b> OF {buses.length} BUSES
         </span>
-        <span className="text-cyan-400 font-semibold">Continuous Kalman GPS Filtering</span>
+        <span className="text-[#CCFF00] font-bold">GPS AVLS STREAMING ACTIVE</span>
       </div>
     </div>
   );

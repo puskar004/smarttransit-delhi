@@ -41,14 +41,14 @@ interface JourneyPlannerTabProps {
   onLiveTrackBus?: (vehicleId: string) => void;
 }
 
-const POPULAR_DELHI_TRIPS = [
-  { label: 'Okhla Ph-III → AIIMS', from: 'iiit_delhi', to: 'aiims' },
-  { label: 'Okhla Ph-III → Connaught Pl', from: 'iiit_delhi', to: 'connaught_place' },
-  { label: 'Nehru Place → Anand Vihar', from: 'nehru_place', to: 'anand_vihar' },
-  { label: 'Hauz Khas → Kashmere Gate', from: 'iit_delhi', to: 'kashmere_gate' },
-];
-
 const SORTED_STOPS = [...DELHI_STOPS].sort((a, b) => a.name.localeCompare(b.name));
+
+const POPULAR_DELHI_TRIPS = [
+  { label: 'Okhla Ph-III ↔ AIIMS', from: 'iiit_delhi', to: 'aiims' },
+  { label: 'Nehru Place ↔ Anand Vihar', from: 'nehru_place', to: 'anand_vihar_isbt' },
+  { label: 'Hauz Khas ↔ Connaught Place', from: 'iit_main_gate', to: 'connaught_place' },
+  { label: 'Kashmere Gate ↔ Saket', from: 'kashmere_gate_isbt', to: 'saket_metro' },
+];
 
 export function JourneyPlannerTab({
   originStopId,
@@ -80,34 +80,34 @@ export function JourneyPlannerTab({
   const routeBuses = buses.filter((b) => activeRouteIds.has(b.routeId));
 
   return (
-    <div className="flex flex-col h-full bg-[#0B0C10] text-[#FFFFFF]">
-      {/* 1. Sleek Search Header */}
-      <div className="p-4 bg-[#12141C] border-b border-[#222736] space-y-3.5">
+    <div className="flex flex-col h-full bg-[#000000] text-white font-sans select-none">
+      {/* 1. Sleek Search Header (Streetwear / Editorial Brutalist) */}
+      <div className="p-4 sm:p-5 bg-[#0A0A0A] border-b border-[#222222] space-y-3.5">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black tracking-widest text-[#E50914] uppercase">
-                SmartTransit AI · Delhi
+              <span className="text-[10px] font-mono font-bold tracking-widest text-[#CCFF00] uppercase">
+                THE TRANSIT RADAR / 002
               </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#00E5FF]/10 text-[#00E5FF] font-semibold border border-[#00E5FF]/20">
-                Problem 02 Unified
+              <span className="text-[9.5px] px-1.5 py-0.2 bg-[#1C1C1C] text-[#CCFF00] font-mono font-bold border border-[#333333] uppercase">
+                CROWD + ETA FUSION
               </span>
             </div>
-            <h2 className="text-[18px] font-extrabold tracking-tight text-white mt-0.5">
-              Plan Next Commute
+            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-white mt-0.5">
+              PLAN COMMUTE.
             </h2>
           </div>
-          <span className="text-[11.5px] font-mono-tabular text-[#94A3B8]">
-            ETM &amp; GPS Fusion
+          <span className="text-[11px] font-mono text-[#8E8E93]">
+            DELHI AVLS GPS
           </span>
         </div>
 
         {/* Input Pair */}
         <div className="flex items-center gap-2">
           <div className="flex flex-col items-center gap-1 shrink-0 py-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] shadow-[0_0_8px_#10B981]" />
-            <span className="w-0.5 h-6 bg-[#2B3245]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#CCFF00] shadow-[0_0_8px_#CCFF00]" />
+            <span className="w-0.5 h-6 bg-[#333333]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_white]" />
           </div>
 
           <div className="flex-1 space-y-2 min-w-0">
@@ -115,11 +115,11 @@ export function JourneyPlannerTab({
               aria-label="Starting stop"
               value={originStopId}
               onChange={(e) => onChangeOrigin(e.target.value)}
-              className="w-full h-9.5 px-3 text-[13px] font-medium bg-[#1A1E29] hover:bg-[#222735] border border-[#2D3447] rounded-xl text-white focus:outline-none focus:border-[#E50914] transition-colors truncate cursor-pointer"
+              className="w-full h-9.5 px-3 text-xs font-semibold bg-[#111111] hover:bg-[#161616] border border-[#262626] focus:border-[#CCFF00] text-white focus:outline-none transition-colors truncate cursor-pointer uppercase tracking-wide"
             >
               {SORTED_STOPS.map((stop) => (
-                <option key={stop.id} value={stop.id} className="bg-[#151821] text-white">
-                  From: {stop.name}
+                <option key={stop.id} value={stop.id} className="bg-[#111111] text-white">
+                  FROM: {stop.name.toUpperCase()}
                 </option>
               ))}
             </select>
@@ -128,11 +128,11 @@ export function JourneyPlannerTab({
               aria-label="Destination stop"
               value={destinationStopId}
               onChange={(e) => onChangeDestination(e.target.value)}
-              className="w-full h-9.5 px-3 text-[13px] font-medium bg-[#1A1E29] hover:bg-[#222735] border border-[#2D3447] rounded-xl text-white focus:outline-none focus:border-[#E50914] transition-colors truncate cursor-pointer"
+              className="w-full h-9.5 px-3 text-xs font-semibold bg-[#111111] hover:bg-[#161616] border border-[#262626] focus:border-[#CCFF00] text-white focus:outline-none transition-colors truncate cursor-pointer uppercase tracking-wide"
             >
               {SORTED_STOPS.map((stop) => (
-                <option key={stop.id} value={stop.id} className="bg-[#151821] text-white">
-                  To: {stop.name}
+                <option key={stop.id} value={stop.id} className="bg-[#111111] text-white">
+                  TO: {stop.name.toUpperCase()}
                 </option>
               ))}
             </select>
@@ -142,13 +142,13 @@ export function JourneyPlannerTab({
             type="button"
             onClick={onSwapEndpoints}
             title="Swap Origin and Destination"
-            className="h-10 w-10 shrink-0 rounded-xl border border-[#2D3447] bg-[#1A1E29] hover:bg-[#262C3D] text-[#94A3B8] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="h-10 w-10 shrink-0 border border-[#262626] bg-[#111111] hover:border-[#CCFF00] text-[#8E8E93] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
           >
             <ArrowUpDown className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Quick Route Presets */}
+        {/* Quick Route Presets (SNKS pill style) */}
         <div className="flex flex-wrap gap-1.5">
           {POPULAR_DELHI_TRIPS.map((preset) => {
             const isActive = originStopId === preset.from && destinationStopId === preset.to;
@@ -160,10 +160,10 @@ export function JourneyPlannerTab({
                   onChangeOrigin(preset.from);
                   onChangeDestination(preset.to);
                 }}
-                className={`text-[11px] px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                className={`text-[10.5px] px-2.5 py-1 uppercase font-bold tracking-wider border transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-[#E50914]/20 border-[#E50914] text-white font-bold shadow-[0_0_12px_rgba(229,9,20,0.3)]'
-                    : 'bg-[#181B26] border-[#2B3142] text-[#94A3B8] hover:border-[#434D68]'
+                    ? 'bg-[#CCFF00] border-[#CCFF00] text-black font-black'
+                    : 'bg-[#111111] border-[#262626] text-[#8E8E93] hover:text-white hover:border-[#444444]'
                 }`}
               >
                 {preset.label}
@@ -172,24 +172,24 @@ export function JourneyPlannerTab({
           })}
         </div>
 
-        {/* Filter Modes (Netflix Category Toggles) */}
-        <div className="grid grid-cols-4 gap-1 p-1 bg-[#161922] rounded-xl border border-[#252A3A] text-[11.5px]">
+        {/* Filter Modes (Category Toggles) */}
+        <div className="grid grid-cols-4 gap-1 p-1 bg-[#111111] border border-[#262626] text-[11px]">
           {(
             [
-              { id: 'FASTEST', label: '⚡ Fastest' },
-              { id: 'COMFORT', label: '💺 Comfort' },
-              { id: 'AC_ONLY', label: '❄️ AC Only' },
-              { id: 'DIRECT', label: '🚌 Direct' },
+              { id: 'FASTEST', label: '⚡ FASTEST' },
+              { id: 'COMFORT', label: '💺 COMFORT' },
+              { id: 'AC_ONLY', label: '❄️ AC ONLY' },
+              { id: 'DIRECT', label: '🚌 DIRECT' },
             ] as const
           ).map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => onChangePreference(item.id)}
-              className={`py-1.5 rounded-lg transition-all text-center font-semibold cursor-pointer ${
+              className={`py-1.5 transition-all text-center font-black uppercase tracking-wider cursor-pointer ${
                 preference === item.id
-                  ? 'bg-[#E50914] text-white shadow-[0_0_12px_rgba(229,9,20,0.4)]'
-                  : 'text-[#94A3B8] hover:text-white'
+                  ? 'bg-[#CCFF00] text-black shadow-sm'
+                  : 'text-[#8E8E93] hover:text-white'
               }`}
             >
               {item.label}
@@ -198,27 +198,27 @@ export function JourneyPlannerTab({
         </div>
       </div>
 
-      {/* Active Traffic Alert Bar */}
+      {/* Active Traffic Alert Bar (NO RED — Warm Amber) */}
       {activeJamCount > 0 && (
-        <div className="mx-4 mt-3 px-3.5 py-2.5 rounded-xl bg-[#2A1115] border border-[#7F1D1D] flex items-center justify-between gap-2 text-[12px] text-[#FCA5A5]">
-          <span className="inline-flex items-center gap-1.5 font-medium">
-            <AlertCircle className="w-4 h-4 text-[#E50914] shrink-0" />
-            {activeJamCount} active Delhi traffic jam{activeJamCount > 1 ? 's' : ''} auto-avoided
+        <div className="mx-4 mt-3 px-3.5 py-2.5 bg-[#141414] border border-[#FFB800] flex items-center justify-between gap-2 text-xs text-white">
+          <span className="inline-flex items-center gap-1.5 font-bold">
+            <AlertCircle className="w-4 h-4 text-[#FFB800] shrink-0" />
+            <span className="text-[#FFB800]">{activeJamCount} active Delhi bottleneck{activeJamCount > 1 ? 's' : ''}</span> auto-rerouted
           </span>
           <button
             type="button"
             onClick={onOpenTrafficMode}
-            className="text-[11.5px] font-bold text-[#FF5A65] hover:underline shrink-0 cursor-pointer"
+            className="text-[11px] font-black uppercase text-[#CCFF00] hover:underline shrink-0 cursor-pointer"
           >
-            View Map
+            Radar Map ↗
           </button>
         </div>
       )}
 
-      {/* 2. Netflix-Style Results Stream */}
+      {/* Results Stream */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {journeys.length === 0 ? (
-          <div className="bg-[#151821] rounded-2xl border border-[#272B38] p-8 text-center text-[13px] text-[#94A3B8]">
+          <div className="bg-[#0E0E0E] border border-[#222222] p-8 text-center text-xs text-[#8E8E93] uppercase font-bold tracking-wider">
             Select two distinct Delhi stops to see AI-optimized routes.
           </div>
         ) : (
@@ -227,22 +227,19 @@ export function JourneyPlannerTab({
             {topPick && (
               <div
                 onClick={() => onSelectJourney(topPick.id)}
-                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1E2333] via-[#161924] to-[#12141D] border-2 border-[#E50914] shadow-[0_0_30px_rgba(229,9,20,0.22)] p-4 cursor-pointer transition-all hover:scale-[1.01]"
+                className="relative overflow-hidden bg-[#0E0E0E] border-2 border-[#CCFF00] p-4.5 cursor-pointer transition-all hover:bg-[#141414] shadow-[0_0_25px_rgba(204,255,0,0.18)]"
               >
-                {/* Glowing Background Watermark */}
-                <div className="absolute top-0 right-0 -mr-6 -mt-6 w-32 h-32 bg-[#E50914]/10 rounded-full blur-2xl pointer-events-none" />
-
-                <div className="relative z-10 space-y-3">
+                <div className="space-y-3">
                   {/* Top Match Tag */}
                   <div className="flex items-center justify-between">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E50914] text-white text-[11px] font-black tracking-wide uppercase">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#CCFF00] text-black text-[10.5px] font-black tracking-wider uppercase">
                       <Zap className="w-3.5 h-3.5 fill-current" />
-                      TOP PICK FOR YOU · {topPick.matchScorePercent}% MATCH
+                      TOP PICK · {topPick.matchScorePercent}% MATCH
                     </div>
 
-                    <div className="text-[12px] font-mono-tabular font-bold text-[#10B981] flex items-center gap-1">
+                    <div className="text-[11.5px] font-mono font-bold text-[#CCFF00] flex items-center gap-1">
                       <Shield className="w-3.5 h-3.5" />
-                      {topPick.seatProbabilityPercent}% Seat Chance
+                      {topPick.seatProbabilityPercent}% SEAT CHANCE
                     </div>
                   </div>
 
@@ -252,77 +249,77 @@ export function JourneyPlannerTab({
                       <div className="flex items-center gap-2">
                         {topPick.routeBadges.map((rb, idx) => (
                           <span key={idx} className="inline-flex items-center gap-1">
-                            {idx > 0 && <span className="text-[#64748B] text-sm">→</span>}
+                            {idx > 0 && <span className="text-[#666666] text-sm">→</span>}
                             <RouteBadge shortName={rb.shortName} operator={rb.operator} size="md" />
                           </span>
                         ))}
                         {topPick.hasAc && (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-[#38BDF8] bg-[#38BDF8]/10 px-2 py-0.5 rounded-full border border-[#38BDF8]/20 font-semibold">
-                            <Snowflake className="w-3 h-3" /> AC Bus
+                          <span className="inline-flex items-center gap-1 text-[10.5px] text-[#CCFF00] bg-[#1A1A1A] px-2 py-0.5 border border-[#333333] font-mono font-bold uppercase">
+                            <Snowflake className="w-3 h-3" /> AC ELECTRIC
                           </span>
                         )}
                       </div>
-                      <h3 className="text-[16px] font-extrabold text-white mt-1.5">
+                      <h3 className="text-base font-black uppercase tracking-tight text-white mt-1.5">
                         {topPick.summaryTitle}
                       </h3>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <div className="text-[28px] font-black leading-none text-white tracking-tight">
+                      <div className="text-3xl font-black leading-none text-white tracking-tighter">
                         {formatMinutesOnly(topPick.predictedTotalSec)}
-                        <span className="text-[13px] font-semibold text-[#94A3B8] ml-0.5">m</span>
+                        <span className="text-xs font-bold text-[#8E8E93] ml-0.5">MIN</span>
                       </div>
-                      <div className="text-[11px] font-mono-tabular text-[#94A3B8] mt-0.5">
-                        Arrives {formatEtaTime(simTimeMs, topPick.predictedTotalSec)}
+                      <div className="text-[11px] font-mono text-[#8E8E93] mt-0.5 uppercase">
+                        ARRIVES {formatEtaTime(simTimeMs, topPick.predictedTotalSec)}
                       </div>
                     </div>
                   </div>
 
                   {/* AI Decision Reasoning Card */}
                   {topPick.aiRecommendationReason && (
-                    <div className="p-3 rounded-xl bg-[#0B0D14]/80 border border-[#2B3245] text-[12px] leading-relaxed text-[#CBD5E1]">
-                      <span className="text-[#00E5FF] font-bold mr-1 inline-flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5 text-[#00E5FF]" /> AI Smart Reason:
+                    <div className="p-3 bg-[#141414] border border-[#222222] text-xs leading-relaxed text-[#D1D1D6]">
+                      <span className="text-[#CCFF00] font-black mr-1 inline-flex items-center gap-1 uppercase tracking-wider">
+                        <Sparkles className="w-3.5 h-3.5 text-[#CCFF00]" /> REASON:
                       </span>
                       {topPick.aiRecommendationReason}
                     </div>
                   )}
 
                   {/* Metrics Bar: Crowd Meter + Fare */}
-                  <div className="grid grid-cols-3 gap-2 pt-1 text-[11.5px]">
-                    <div className="bg-[#12151F] rounded-lg p-2 border border-[#252B3B]">
-                      <div className="text-[10px] uppercase font-bold text-[#94A3B8]">Crowd Level</div>
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-[11px]">
+                    <div className="bg-[#141414] p-2 border border-[#222222]">
+                      <div className="text-[9px] uppercase font-mono font-bold text-[#666666]">CROWD LOAD</div>
                       <div className="font-bold mt-0.5 flex items-center gap-1.5">
                         <span
                           className={`w-2 h-2 rounded-full ${
                             topPick.crowdLevel === 'LOW'
-                              ? 'bg-[#10B981]'
+                              ? 'bg-[#CCFF00]'
                               : topPick.crowdLevel === 'MEDIUM'
-                                ? 'bg-[#F59E0B]'
-                                : 'bg-[#E50914]'
+                                ? 'bg-[#FFB800]'
+                                : 'bg-white'
                           }`}
                         />
-                        <span className="text-white">
+                        <span className="text-white uppercase font-bold text-[10.5px]">
                           {topPick.crowdLevel === 'LOW'
-                            ? 'Comfortable'
+                            ? 'Seats Free'
                             : topPick.crowdLevel === 'MEDIUM'
                               ? 'Moderate'
-                              : 'High Crowd'}
+                              : 'High Load'}
                         </span>
-                        <span className="text-[#64748B] font-mono-tabular">({topPick.occupancyPercent}%)</span>
+                        <span className="text-[#666666] font-mono">({topPick.occupancyPercent}%)</span>
                       </div>
                     </div>
 
-                    <div className="bg-[#12151F] rounded-lg p-2 border border-[#252B3B]">
-                      <div className="text-[10px] uppercase font-bold text-[#94A3B8]">Next Bus</div>
-                      <div className="font-bold mt-0.5 text-[#38BDF8] font-mono-tabular">
-                        in {formatDurationMin(topPick.nextBusWaitSec)}
+                    <div className="bg-[#141414] p-2 border border-[#222222]">
+                      <div className="text-[9px] uppercase font-mono font-bold text-[#666666]">NEXT BUS</div>
+                      <div className="font-bold mt-0.5 text-[#CCFF00] font-mono uppercase text-[10.5px]">
+                        IN {formatDurationMin(topPick.nextBusWaitSec)}
                       </div>
                     </div>
 
-                    <div className="bg-[#12151F] rounded-lg p-2 border border-[#252B3B] text-right">
-                      <div className="text-[10px] uppercase font-bold text-[#94A3B8]">Fare · Dist</div>
-                      <div className="font-bold mt-0.5 text-white font-mono-tabular">
+                    <div className="bg-[#141414] p-2 border border-[#222222] text-right">
+                      <div className="text-[9px] uppercase font-mono font-bold text-[#666666]">FARE · DIST</div>
+                      <div className="font-bold mt-0.5 text-white font-mono uppercase text-[10.5px]">
                         ₹{topPick.totalFareInr} · {formatDistanceKm(topPick.totalDistanceMeters)}
                       </div>
                     </div>
@@ -338,10 +335,10 @@ export function JourneyPlannerTab({
                         onLiveTrackBus(bestBus.vehicleId);
                       }
                     }}
-                    className="w-full mt-2.5 py-2.5 rounded-xl bg-gradient-to-r from-[#10B981] to-[#00E5FF] hover:opacity-95 text-black font-extrabold text-[12.5px] inline-flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all cursor-pointer"
+                    className="w-full mt-2.5 py-2.5 bg-[#CCFF00] hover:bg-[#B8E600] text-black font-black uppercase tracking-wider text-xs inline-flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
                   >
-                    <Compass className="w-4 h-4 text-black" />
-                    <span>Live Track Recommended Bus on Delhi Map</span>
+                    <Compass className="w-4 h-4 stroke-[2.5]" />
+                    <span>Live Track Bus on Delhi Map ↗</span>
                   </button>
                 </div>
               </div>
@@ -349,16 +346,16 @@ export function JourneyPlannerTab({
 
             {/* LIVE SECTION: BUSES RUNNING RIGHT NOW ON THIS ROUTE */}
             {routeBuses.length > 0 && (
-              <div className="bg-[#131622] rounded-2xl border border-[#262D42] p-3.5 sm:p-4 space-y-3">
+              <div className="bg-[#0E0E0E] border border-[#222222] p-3.5 sm:p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#10B981] animate-pulse" />
-                    <span className="text-[12px] font-black uppercase tracking-wider text-white">
-                      Buses Running Right Now on This Corridor
+                    <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse" />
+                    <span className="text-xs font-black uppercase tracking-wider text-white">
+                      CORRIDOR BUSES ACTIVE NOW
                     </span>
                   </div>
-                  <span className="text-[11px] font-semibold text-[#00E5FF]">
-                    {routeBuses.length} Live Buses
+                  <span className="text-[11px] font-mono font-bold text-[#CCFF00]">
+                    {routeBuses.length} LIVE SENSORS
                   </span>
                 </div>
 
@@ -373,40 +370,32 @@ export function JourneyPlannerTab({
                     return (
                       <div
                         key={bus.vehicleId}
-                        className="p-3 rounded-xl bg-[#1B1F2E] border border-[#273046] flex items-center justify-between gap-3 hover:border-[#00E5FF]/60 transition-all"
+                        className="p-3 bg-[#141414] border border-[#222222] flex items-center justify-between gap-3 hover:border-[#CCFF00] transition-all"
                       >
                         <div className="min-w-0 space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-mono-tabular font-extrabold text-[13px] text-white">
-                              Bus {bus.routeShortName} ({bus.vehicleId})
+                            <span className="font-mono font-extrabold text-xs text-white">
+                              BUS {bus.routeShortName} ({bus.vehicleId})
                             </span>
                             <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              className={`text-[9.5px] font-mono font-bold px-1.5 py-0.2 uppercase ${
                                 isOnTime
-                                  ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40'
+                                  ? 'bg-[#CCFF00] text-black'
                                   : isDelayed
-                                    ? 'bg-[#E50914]/20 text-[#FF5A65] border border-[#E50914]/40'
-                                    : 'bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40'
+                                    ? 'bg-[#FFB800] text-black'
+                                    : 'bg-white text-black'
                               }`}
                             >
-                              {isOnTime ? '🟢 On Time' : isDelayed ? `🔴 Delayed ${delayMin}m` : `🟡 Early`}
+                              {isOnTime ? 'ON TIME' : isDelayed ? `+${delayMin}M LATE` : `EARLY`}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2.5 text-[11px] text-[#94A3B8]">
+                          <div className="flex items-center gap-2 text-[11px] text-[#8E8E93]">
                             <span>
-                              Next: <b>{bus.nextStopName}</b> (~{Math.max(1, Math.round(bus.etaNextStopSec / 60))}m)
+                              NEXT: <b className="text-white uppercase">{bus.nextStopName}</b> (~{Math.max(1, Math.round(bus.etaNextStopSec / 60))}M)
                             </span>
-                            <span>·</span>
-                            <span
-                              className={
-                                occ < 45
-                                  ? 'text-[#10B981] font-bold'
-                                  : occ < 75
-                                    ? 'text-[#F59E0B] font-bold'
-                                    : 'text-[#E50914] font-bold'
-                              }
-                            >
-                              {occ}% Crowd {occ < 45 ? '(Seats Free)' : '(Crowded)'}
+                            <span>•</span>
+                            <span className="text-[#CCFF00] font-bold">
+                              {occ}% LOAD
                             </span>
                           </div>
                         </div>
@@ -414,10 +403,10 @@ export function JourneyPlannerTab({
                         <button
                           type="button"
                           onClick={() => onLiveTrackBus && onLiveTrackBus(bus.vehicleId)}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#E50914] hover:bg-[#FF1E28] text-white text-[11.5px] font-bold inline-flex items-center gap-1.5 shadow-sm transition-all cursor-pointer shrink-0"
+                          className="px-3.5 py-1.5 bg-[#CCFF00] hover:bg-[#B8E600] text-black text-[11px] font-black uppercase tracking-wider inline-flex items-center gap-1 transition-all cursor-pointer shrink-0"
                         >
-                          <Compass className="w-3.5 h-3.5" />
-                          <span>Live Track</span>
+                          <Compass className="w-3 h-3 stroke-[2.5]" />
+                          <span>Track ↗</span>
                         </button>
                       </div>
                     );
@@ -428,9 +417,9 @@ export function JourneyPlannerTab({
 
             {/* CATEGORY RAIL: ALL AVAILABLE OPTIONS */}
             <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between text-[12px] font-bold text-[#94A3B8] px-1 uppercase tracking-wider">
-                <span>All Alternative Itineraries</span>
-                <span className="text-[11px] text-[#64748B]">Sorted by {preference}</span>
+              <div className="flex items-center justify-between text-xs font-bold text-[#8E8E93] px-1 uppercase tracking-wider font-mono">
+                <span>ALTERNATIVE ITINERARIES</span>
+                <span className="text-[10px] text-[#555555]">SORTED: {preference}</span>
               </div>
 
               {journeys.map((j) => {
@@ -442,10 +431,10 @@ export function JourneyPlannerTab({
                   <div
                     key={j.id}
                     onClick={() => onSelectJourney(j.id)}
-                    className={`rounded-2xl transition-all cursor-pointer border ${
+                    className={`transition-all cursor-pointer border ${
                       isSelected
-                        ? 'bg-[#1A1E2B] border-[#00E5FF] shadow-[0_0_20px_rgba(0,229,255,0.18)]'
-                        : 'bg-[#14161F] border-[#222736] hover:border-[#384055]'
+                        ? 'bg-[#141414] border-[#CCFF00] shadow-[0_0_15px_rgba(204,255,0,0.15)]'
+                        : 'bg-[#0E0E0E] border-[#222222] hover:border-[#444444]'
                     }`}
                   >
                     <div className="p-3.5 space-y-3">
@@ -455,85 +444,85 @@ export function JourneyPlannerTab({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {j.routeBadges.map((rb, idx) => (
                               <span key={idx} className="inline-flex items-center gap-1">
-                                {idx > 0 && <span className="text-[#64748B] text-xs">→</span>}
+                                {idx > 0 && <span className="text-[#666666] text-xs">→</span>}
                                 <RouteBadge shortName={rb.shortName} operator={rb.operator} size="sm" />
                               </span>
                             ))}
 
-                            <span className="text-[11px] font-bold text-[#46D369] bg-[#46D369]/10 px-2 py-0.5 rounded-full border border-[#46D369]/20">
-                              {j.matchScorePercent}% Match
+                            <span className="text-[10px] font-mono font-bold text-black bg-[#CCFF00] px-1.5 py-0.2 uppercase">
+                              {j.matchScorePercent}% MATCH
                             </span>
 
                             {j.tags.map((tag) => (
                               <span
                                 key={tag}
-                                className="text-[10px] font-semibold text-[#94A3B8] bg-[#1E2230] px-2 py-0.5 rounded-md"
+                                className="text-[9.5px] font-mono uppercase text-[#8E8E93] bg-[#161616] px-1.5 py-0.2 border border-[#262626]"
                               >
                                 {tag}
                               </span>
                             ))}
                           </div>
-                          <div className="text-[12.5px] text-[#94A3B8] truncate">{j.summaryTitle}</div>
+                          <div className="text-xs text-[#8E8E93] truncate uppercase">{j.summaryTitle}</div>
                         </div>
 
                         <div className="text-right shrink-0">
-                          <div className="text-[22px] font-extrabold text-white leading-none">
+                          <div className="text-2xl font-black text-white leading-none tracking-tight">
                             {formatMinutesOnly(j.predictedTotalSec)}
-                            <span className="text-[12px] font-normal text-[#94A3B8] ml-0.5">m</span>
+                            <span className="text-xs font-normal text-[#8E8E93] ml-0.5">MIN</span>
                           </div>
                           <div
-                            className={`text-[10.5px] font-mono-tabular mt-1 font-semibold ${
-                              isDelay ? 'text-[#F87171]' : 'text-[#34D399]'
+                            className={`text-[10px] font-mono mt-1 font-bold uppercase ${
+                              isDelay ? 'text-[#FFB800]' : 'text-[#CCFF00]'
                             }`}
                           >
                             {isDelay
-                              ? `+${Math.round(j.delayDeltaSec / 60)}m delay`
-                              : 'Smooth traffic'}
+                              ? `+${Math.round(j.delayDeltaSec / 60)}M DELAY`
+                              : 'ON SCHEDULE'}
                           </div>
                         </div>
                       </div>
 
-                      {/* Problem 02: Passenger Crowdedness Bar */}
+                      {/* Passenger Crowdedness Bar */}
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-[#94A3B8] flex items-center gap-1.5">
+                          <span className="text-[#8E8E93] flex items-center gap-1.5 uppercase font-medium">
                             <span
                               className={`w-2 h-2 rounded-full ${
                                 j.crowdLevel === 'LOW'
-                                  ? 'bg-[#10B981]'
+                                  ? 'bg-[#CCFF00]'
                                   : j.crowdLevel === 'MEDIUM'
-                                    ? 'bg-[#F59E0B]'
-                                    : 'bg-[#E50914]'
+                                    ? 'bg-[#FFB800]'
+                                    : 'bg-white'
                               }`}
                             />
-                            <b>{j.crowdLevel === 'LOW' ? 'Low Crowd' : j.crowdLevel === 'MEDIUM' ? 'Moderate' : 'Heavy Rush'}</b>
-                            <span className="text-[#64748B]">({j.occupancyPercent}% load)</span>
+                            <b>{j.crowdLevel === 'LOW' ? 'Low Crowd' : j.crowdLevel === 'MEDIUM' ? 'Moderate' : 'Heavy Load'}</b>
+                            <span className="text-[#555555] font-mono">({j.occupancyPercent}%)</span>
                           </span>
-                          <span className="text-[#38BDF8] font-semibold">
-                            💺 {j.seatProbabilityPercent}% Seat Chance
+                          <span className="text-[#CCFF00] font-mono font-bold text-[10.5px]">
+                            💺 {j.seatProbabilityPercent}% SEAT CHANCE
                           </span>
                         </div>
 
-                        <div className="h-2 rounded-full bg-[#1E2333] overflow-hidden flex">
+                        <div className="h-1.5 bg-[#1C1C1C] overflow-hidden flex">
                           <div
                             style={{
                               width: `${j.occupancyPercent}%`,
                               backgroundColor:
                                 j.crowdLevel === 'LOW'
-                                  ? '#10B981'
+                                  ? '#CCFF00'
                                   : j.crowdLevel === 'MEDIUM'
-                                    ? '#F59E0B'
-                                    : '#E50914',
+                                    ? '#FFB800'
+                                    : '#FFFFFF',
                             }}
-                            className="h-full rounded-full transition-all duration-500 shadow-sm"
+                            className="h-full transition-all duration-500"
                           />
                         </div>
                       </div>
 
                       {/* Bottom Quick Row */}
-                      <div className="flex items-center justify-between pt-1 border-t border-[#1F2432] text-[11.5px] text-[#94A3B8]">
-                        <span>Next bus: <b className="text-white">{formatDurationMin(j.nextBusWaitSec)}</b></span>
-                        <span>Fare: <b className="text-white">₹{j.totalFareInr}</b></span>
+                      <div className="flex items-center justify-between pt-1 border-t border-[#1C1C1C] text-[11px] font-mono text-[#8E8E93]">
+                        <span>NEXT: <b className="text-white">{formatDurationMin(j.nextBusWaitSec)}</b></span>
+                        <span>FARE: <b className="text-white">₹{j.totalFareInr}</b></span>
                         <button
                           type="button"
                           onClick={(e) => {
@@ -541,9 +530,9 @@ export function JourneyPlannerTab({
                             onSelectJourney(j.id);
                             setExpandedId(isExpanded ? null : j.id);
                           }}
-                          className="text-[11.5px] font-bold text-[#00E5FF] hover:underline flex items-center gap-0.5 cursor-pointer"
+                          className="text-[11px] font-black uppercase text-[#CCFF00] hover:underline flex items-center gap-0.5 cursor-pointer"
                         >
-                          {isExpanded ? 'Hide' : 'Stops'}
+                          {isExpanded ? 'LESS' : 'STOPS'}
                           {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                         </button>
                       </div>
@@ -551,45 +540,45 @@ export function JourneyPlannerTab({
 
                     {/* Expandable Step-by-Step Breakdown */}
                     {isExpanded && (
-                      <div className="px-3.5 pb-3.5 pt-1 border-t border-[#222736] bg-[#0E1017] rounded-b-2xl space-y-2.5 text-[12px]">
+                      <div className="px-3.5 pb-3.5 pt-1 border-t border-[#222222] bg-[#0A0A0A] space-y-2 text-xs">
                         {j.legs.map((leg, lIdx) => (
                           <div key={lIdx}>
                             {leg.type === 'WAIT' && (
-                              <div className="flex items-center justify-between text-[#94A3B8] py-1">
+                              <div className="flex items-center justify-between text-[#8E8E93] py-1 font-mono text-[11px]">
                                 <span className="inline-flex items-center gap-2">
-                                  <Clock className="w-3.5 h-3.5 text-[#00E5FF]" />
-                                  Board at <b className="text-white">{leg.fromStopName}</b>
+                                  <Clock className="w-3.5 h-3.5 text-[#CCFF00]" />
+                                  BOARD AT <b className="text-white uppercase">{leg.fromStopName}</b>
                                 </span>
-                                <span className="font-mono-tabular text-white">{formatDurationMin(leg.durationSec)}</span>
+                                <span className="text-white">{formatDurationMin(leg.durationSec)}</span>
                               </div>
                             )}
 
                             {leg.type === 'TRANSFER_WALK' && (
-                              <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#241B12] text-[#F59E0B] border border-[#503512]">
-                                <span className="inline-flex items-center gap-1.5 font-bold">
+                              <div className="flex items-center justify-between px-3 py-1.5 bg-[#141414] text-[#FFB800] border border-[#333333] font-mono text-[11px]">
+                                <span className="inline-flex items-center gap-1.5 font-bold uppercase">
                                   <Footprints className="w-3.5 h-3.5" />
-                                  Change bus at {leg.fromStopName}
+                                  CHANGE BUS AT {leg.fromStopName}
                                 </span>
-                                <span className="font-mono-tabular">{formatDurationMin(leg.durationSec)}</span>
+                                <span>{formatDurationMin(leg.durationSec)}</span>
                               </div>
                             )}
 
                             {leg.type === 'BUS' && leg.segments && (
-                              <div className="bg-[#151822] border border-[#272B3A] rounded-xl p-2.5 space-y-2">
+                              <div className="bg-[#111111] border border-[#262626] p-2.5 space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <span className="inline-flex items-center gap-1.5 font-bold text-white">
-                                    <Bus className="w-3.5 h-3.5 text-[#00E5FF]" />
-                                    Take Route {leg.routeShortName} ({leg.stopCount} stops)
+                                  <span className="inline-flex items-center gap-1.5 font-black uppercase text-white">
+                                    <Bus className="w-3.5 h-3.5 text-[#CCFF00]" />
+                                    ROUTE {leg.routeShortName} ({leg.stopCount} STOPS)
                                   </span>
-                                  <span className="font-bold text-white">{formatDurationMin(leg.durationSec)}</span>
+                                  <span className="font-mono text-white text-[11px]">{formatDurationMin(leg.durationSec)}</span>
                                 </div>
 
-                                <div className="pl-2 space-y-1 border-l-2 border-[#2B3145] ml-1.5">
+                                <div className="pl-2 space-y-1 border-l border-[#333333] ml-1.5">
                                   {leg.segments.map((seg) => (
-                                    <div key={seg.segmentId} className="flex items-center justify-between text-[11px] pl-2 text-[#94A3B8]">
-                                      <span className="truncate">{seg.toStopName}</span>
-                                      <span className="font-mono-tabular text-[#CBD5E1] ml-2">
-                                        {seg.speedKmh.toFixed(0)} km/h
+                                    <div key={seg.segmentId} className="flex items-center justify-between text-[10.5px] pl-2 text-[#8E8E93] font-mono">
+                                      <span className="truncate uppercase">{seg.toStopName}</span>
+                                      <span className="text-white ml-2">
+                                        {seg.speedKmh.toFixed(0)} KM/H
                                       </span>
                                     </div>
                                   ))}

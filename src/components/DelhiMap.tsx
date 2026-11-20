@@ -401,13 +401,13 @@ export function DelhiMap({
         }).addTo(routeGroup);
       }
 
-      // Destination Pin (Netflix Red)
+      // Destination Pin (Volt Accent)
       if (dest) {
         L.circleMarker([dest.lat, dest.lng], {
           pane: 'stopPane',
           radius: 7,
-          fillColor: '#E50914',
-          color: '#FFFFFF',
+          fillColor: '#CCFF00',
+          color: '#000000',
           weight: 3,
           fillOpacity: 1,
         }).addTo(stopGroup);
@@ -417,7 +417,7 @@ export function DelhiMap({
           interactive: false,
           icon: L.divIcon({
             className: '',
-            html: `<div style="transform:translate(-50%,-145%);display:inline-flex;align-items:center;gap:6px;background:#E50914;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:8px;white-space:nowrap;border:2px solid #fff;box-shadow:0 0 20px rgba(229,9,20,0.8)">TO · ${dest.name}</div>`,
+            html: `<div style="transform:translate(-50%,-145%);display:inline-flex;align-items:center;gap:6px;background:#CCFF00;color:#000;font-size:11px;font-weight:900;padding:4px 10px;border-radius:6px;white-space:nowrap;border:2px solid #000;box-shadow:0 0 20px rgba(204,255,0,0.85);font-family:'Plus Jakarta Sans',sans-serif;text-transform:uppercase;letter-spacing:0.05em">TO · ${dest.name}</div>`,
             iconSize: [0, 0],
           }),
         }).addTo(routeGroup);
@@ -469,7 +469,7 @@ export function DelhiMap({
       const trackedBus = buses.find((b) => b.vehicleId === trackedBusId);
       if (trackedBus) {
         const occ = Math.round(((trackedBus.passengersEst ?? 30) / 60) * 100);
-        const crowdColor = occ < 45 ? '#10B981' : occ < 75 ? '#F59E0B' : '#E50914';
+        const crowdColor = occ < 45 ? '#CCFF00' : occ < 75 ? '#FFB800' : '#FFFFFF';
 
         L.marker([trackedBus.lat, trackedBus.lng], {
           pane: 'busPane',
@@ -504,7 +504,7 @@ export function DelhiMap({
       for (const bus of relevantBuses) {
         const meta = OPERATOR_META[bus.operator];
         const occ = Math.round(((bus.passengersEst ?? 30) / 60) * 100);
-        const crowdColor = occ < 45 ? '#10B981' : occ < 75 ? '#F59E0B' : '#E50914';
+        const crowdColor = occ < 45 ? '#CCFF00' : occ < 75 ? '#FFB800' : '#FFFFFF';
 
         L.marker([bus.lat, bus.lng], {
           pane: 'busPane',
@@ -536,7 +536,7 @@ export function DelhiMap({
       buses.forEach((bus, idx) => {
         if (idx % 3 !== 0) return;
         const occ = Math.round(((bus.passengersEst ?? 30) / 60) * 100);
-        const crowdColor = occ < 45 ? '#10B981' : occ < 75 ? '#F59E0B' : '#E50914';
+        const crowdColor = occ < 45 ? '#CCFF00' : occ < 75 ? '#FFB800' : '#FFFFFF';
 
         L.circleMarker([bus.lat, bus.lng], {
           pane: 'busPane',

@@ -2,20 +2,20 @@
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  --bg-main: #0B0C10;
-  --bg-card: #151821;
-  --bg-surface: #1E222D;
-  --bg-subtle: #2A2F3D;
-  --netflix-red: #E50914;
-  --netflix-red-glow: rgba(229, 9, 20, 0.35);
+  --bg-main: #000000;
+  --bg-card: #0E0E0E;
+  --bg-surface: #141414;
+  --bg-subtle: #1C1C1C;
+  --volt-accent: #CCFF00;
+  --volt-glow: rgba(204, 255, 0, 0.35);
   --emerald-comfort: #10B981;
-  --amber-crowd: #F59E0B;
+  --amber-crowd: #FFB800;
   --cyan-ai: #00E5FF;
   --text-main: #FFFFFF;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  --border-dark: #272B38;
-  --border-highlight: #3A4154;
+  --text-secondary: #999999;
+  --text-muted: #555555;
+  --border-dark: #242424;
+  --border-highlight: #333333;
 }
 
 * {
@@ -124,48 +124,48 @@ body,
 }
 
 .leaflet-control-zoom a:hover {
-  background: #202432 !important;
-  color: #E50914 !important;
+  background: #CCFF00 !important;
+  color: #000000 !important;
 }
 
 .leaflet-control-attribution {
-  background: rgba(11, 12, 16, 0.88) !important;
-  color: #64748B !important;
+  background: rgba(0, 0, 0, 0.9) !important;
+  color: #666666 !important;
   font-size: 10px !important;
   padding: 2px 8px !important;
   border-top-left-radius: 8px;
 }
 
 .leaflet-tooltip.pravaah-dark-tooltip {
-  background: #151821;
+  background: #0E0E0E;
   color: #FFFFFF;
-  border: 1px solid #2F3547;
-  border-radius: 10px;
+  border: 1px solid #262626;
+  border-radius: 8px;
   padding: 8px 12px;
   font-size: 12px;
   line-height: 1.45;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.85);
 }
 
 .leaflet-tooltip.pravaah-dark-tooltip::before {
-  border-top-color: #151821 !important;
+  border-top-color: #0E0E0E !important;
 }
 
 .bus-smooth-marker {
   transition: transform 0.9s linear;
 }
 
-/* Glass & Neon Glow Helpers */
-.netflix-glow-red {
-  box-shadow: 0 0 25px rgba(229, 9, 20, 0.35);
+/* Glass & Volt Glow Helpers */
+.volt-glow {
+  box-shadow: 0 0 25px rgba(204, 255, 0, 0.35);
 }
 
-.netflix-glow-emerald {
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.28);
-}
-
-.netflix-glow-cyan {
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.25);
+.volt-badge {
+  background: #CCFF00;
+  color: #000000;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .glass-card {

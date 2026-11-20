@@ -29,83 +29,65 @@ export function QuickServicesBar({
   const services = [
     {
       id: 'ALL_BUSES',
-      title: 'All Available Buses',
-      subtitle: 'See on-time/delay & live track',
+      num: '01',
+      title: 'ALL AVAILABLE BUSES',
+      subtitle: 'On-time, delay & live track',
       icon: Bus,
       badge: '72 LIVE',
-      badgeColor: '#10B981',
-      bgLight: '#ECFDF5',
-      accentColor: '#059669',
-      borderLight: '#A7F3D0',
       onClick: onOpenLiveTrackSearch,
     },
     {
       id: 'PLANNER',
-      title: 'Journey Planner',
-      subtitle: 'Fastest vs Guaranteed Seats',
+      num: '02',
+      title: 'JOURNEY PLANNER',
+      subtitle: 'Fastest vs guaranteed seats',
       icon: RouteIcon,
-      badge: 'AI TOP PICK',
-      badgeColor: '#7C3AED',
-      bgLight: '#F5F3FF',
-      accentColor: '#7C3AED',
-      borderLight: '#DDD6FE',
+      badge: 'SMART AI',
       onClick: onOpenPlanner,
     },
     {
       id: 'STOP_ARRIVALS',
-      title: 'Stop Arrivals ("Ye Bus")',
+      num: '03',
+      title: 'STOP ARRIVALS ("YE BUS")',
       subtitle: 'Next buses at Delhi stops',
       icon: Clock,
-      badge: 'GPS SYNCED',
-      badgeColor: '#0284C7',
-      bgLight: '#F0F9FF',
-      accentColor: '#0284C7',
-      borderLight: '#BAE6FD',
+      badge: 'PIS AVLS',
       onClick: onOpenStopArrivals,
     },
     {
       id: 'CROWD_RADAR',
-      title: 'Crowd Radar',
-      subtitle: 'Seats vs Crush Load',
+      num: '04',
+      title: 'CROWD RADAR',
+      subtitle: 'Seats vs crush load routing',
       icon: Users,
       badge: 'PROBLEM 02',
-      badgeColor: '#D97706',
-      bgLight: '#FFFBEB',
-      accentColor: '#D97706',
-      borderLight: '#FDE68A',
       onClick: onOpenCrowdRadar,
     },
     {
       id: 'JAM_SIMULATOR',
-      title: 'Traffic & Delay Model',
-      subtitle: 'Shockwaves & bottleneck ETA',
+      num: '05',
+      title: 'TRAFFIC & DELAY MODEL',
+      subtitle: 'Kalman shockwaves & ETA',
       icon: Flame,
       badge: 'PROBLEM 01',
-      badgeColor: '#DC2626',
-      bgLight: '#FEF2F2',
-      accentColor: '#DC2626',
-      borderLight: '#FECACA',
       onClick: onOpenJamSimulator,
     },
     {
       id: 'API_DATA',
-      title: 'Delhi APIs & Data',
-      subtitle: 'Zero API key needed to demo',
+      num: '06',
+      title: 'DELHI APIS & OPEN DATA',
+      subtitle: 'Real Delhi GTFS & AVLS feeds',
       icon: Database,
-      badge: 'OPEN DATA',
-      badgeColor: '#9333EA',
-      bgLight: '#FAF5FF',
-      accentColor: '#9333EA',
-      borderLight: '#E9D5FF',
+      badge: 'OPEN STACK',
       onClick: onOpenApiGuide,
     },
   ];
 
   return (
-    <div className="bg-white border-b border-slate-200/80 px-3 sm:px-6 py-2 overflow-x-auto shrink-0 shadow-xs">
-      <div className="flex items-center gap-2 sm:gap-3 min-w-max">
-        <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mr-1 hidden xl:inline">
-          TRANSIT SERVICES:
+    <div className="bg-[#000000] border-b border-[#222222] px-3 sm:px-6 py-2 overflow-x-auto shrink-0 select-none">
+      <div className="flex items-center gap-2 sm:gap-2.5 min-w-max">
+        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#666666] mr-1 hidden xl:inline">
+          DOCKS /
         </span>
 
         {services.map((item) => {
@@ -116,52 +98,44 @@ export function QuickServicesBar({
               key={item.id}
               type="button"
               onClick={item.onClick}
-              className={`flex items-center gap-2.5 px-3 py-1.5 rounded-2xl text-left transition-all cursor-pointer group border ${
+              className={`flex items-center gap-2.5 px-3 py-1.5 text-left transition-all cursor-pointer group border ${
                 isActive
-                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-500/20 border-violet-600'
-                  : 'hover:shadow-xs'
+                  ? 'bg-[#CCFF00] text-black border-[#CCFF00] shadow-[0_0_15px_rgba(204,255,0,0.25)]'
+                  : 'bg-[#0E0E0E] hover:bg-[#141414] text-white border-[#242424] hover:border-[#CCFF00]'
               }`}
-              style={{
-                backgroundColor: isActive ? undefined : item.bgLight,
-                borderColor: isActive ? undefined : item.borderLight,
-              }}
             >
               <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
-                  isActive ? 'bg-white/20 text-white' : ''
+                className={`w-7 h-7 flex items-center justify-center shrink-0 border ${
+                  isActive
+                    ? 'bg-black text-[#CCFF00] border-black'
+                    : 'bg-[#161616] text-[#CCFF00] border-[#333333] group-hover:border-[#CCFF00]'
                 }`}
-                style={{
-                  backgroundColor: isActive ? undefined : `${item.accentColor}20`,
-                  color: isActive ? '#FFFFFF' : item.accentColor,
-                }}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3.5 h-3.5 stroke-[2.2]" />
               </div>
 
               <div className="text-left">
                 <div className="flex items-center gap-1.5">
                   <span
-                    className={`text-[12px] font-bold leading-tight block ${
-                      isActive ? 'text-white' : 'text-slate-900'
+                    className={`text-[11px] font-black uppercase tracking-wider leading-tight block ${
+                      isActive ? 'text-black' : 'text-white'
                     }`}
                   >
                     {item.title}
                   </span>
                   <span
-                    className={`text-[8.5px] font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider ${
-                      isActive ? 'bg-white/25 text-white' : ''
+                    className={`text-[8.5px] font-mono font-black px-1.5 py-0.2 uppercase tracking-wider ${
+                      isActive
+                        ? 'bg-black text-[#CCFF00]'
+                        : 'bg-[#1C1C1C] text-[#CCFF00] border border-[#333333]'
                     }`}
-                    style={{
-                      backgroundColor: isActive ? undefined : `${item.badgeColor}20`,
-                      color: isActive ? '#FFFFFF' : item.badgeColor,
-                    }}
                   >
                     {item.badge}
                   </span>
                 </div>
                 <span
-                  className={`text-[10px] leading-tight block ${
-                    isActive ? 'text-violet-100' : 'text-slate-500'
+                  className={`text-[9.5px] leading-tight block font-medium truncate ${
+                    isActive ? 'text-black/80 font-semibold' : 'text-[#888888]'
                   }`}
                 >
                   {item.subtitle}

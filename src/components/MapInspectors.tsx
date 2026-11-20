@@ -209,7 +209,7 @@ export function StopPisCard({
           <button
             type="button"
             onClick={() => onSetDestination(stop.id)}
-            className="h-9 rounded-xl bg-[#E50914] hover:bg-[#B80710] text-white text-[12px] font-bold cursor-pointer transition-colors shadow-[0_0_12px_rgba(229,9,20,0.4)]"
+            className="h-9 rounded-xl bg-[#CCFF00] hover:bg-[#B8E600] text-black text-[12px] font-black uppercase tracking-wider cursor-pointer transition-colors shadow-[0_0_12px_rgba(204,255,0,0.3)]"
           >
             Go Here
           </button>
@@ -217,7 +217,7 @@ export function StopPisCard({
 
         <div>
           <div className="flex items-center justify-between text-[11px] font-bold text-[#94A3B8] mb-2 uppercase tracking-wide">
-            <span className="inline-flex items-center gap-1.5 text-[#10B981]">
+            <span className="inline-flex items-center gap-1.5 text-[#CCFF00]">
               <Radio className="w-3.5 h-3.5 animate-pulse" /> Approaching Buses
             </span>
             <span>Live ETA &amp; Crowd</span>
@@ -241,7 +241,7 @@ export function StopPisCard({
                         to {arr.destinationName}
                       </div>
                       <div className="text-[10px] text-[#94A3B8]">
-                        Load: <b className={arr.occupancyPercent >= 75 ? 'text-[#E50914]' : 'text-[#10B981]'}>{arr.occupancyPercent}%</b>
+                        Load: <b className={arr.occupancyPercent >= 75 ? 'text-[#FFB800]' : 'text-[#CCFF00]'}>{arr.occupancyPercent}%</b>
                       </div>
                     </div>
                   </div>
