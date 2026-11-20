@@ -1,3 +1,5 @@
+import { OrbitControls } from '@react-three/drei';
+import { Canvas } from '@react-three/fiber';
 import {
   ArrowRight,
   Bus,
@@ -6,12 +8,12 @@ import {
   Lock,
   Phone,
   Radio,
-  Sparkles,
   Ticket,
   User,
   Users,
 } from 'lucide-react';
-import React, { useRef, useState } from 'react';
+import React, { Suspense, useState } from 'react';
+import { ElectricBusModel, WebGLErrorBoundary } from './Bus3DShowcase';
 
 export interface UserProfile {
   name: string;
@@ -33,29 +35,6 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
   const [passId, setPassId] = useState('DL-DTC-84920');
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeUser, setWelcomeUser] = useState<UserProfile | null>(null);
-
-  // 3D Visual Tilt effect on login left showcase card
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [rotateX, setRotateX] = useState(0);
-  const [rotateY, setRotateY] = useState(0);
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    setRotateX(-((y - centerY) / centerY) * 10);
-    setRotateY(((x - centerX) / centerX) * 12);
-  };
-
-  const handleMouseLeave = () => {
-    setRotateX(0);
-    setRotateY(0);
-    setIsHovered(false);
-  };
 
   const triggerLogin = (user: UserProfile) => {
     setWelcomeUser(user);
@@ -125,8 +104,8 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
       {/* 3. SPLIT-SCREEN DASHBOARD VIEW */}
       <main className="flex-1 flex items-center justify-center py-6 sm:py-10 px-4 sm:px-8">
         <div className="max-w-[1280px] w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          {/* LEFT SIDE: 3D/2D Bus Visual Showcase & Top Telemetry */}
-          <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-left space-y-5">
+          {/* LEFT SIDE: Exact 3D Rotatable Bus Model Showcase */}
+          <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-left space-y-4">
             {/* Top Telemetry Capsule: 72 LIVE BUSES • AVLS GPS */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#121620] border border-[#252c3e] text-xs font-mono font-bold text-[#ccff00] shadow-sm">
               <Radio className="w-3.5 h-3.5 animate-pulse text-[#ccff00]" />
@@ -135,7 +114,7 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
               </span>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-tight leading-tight">
                 DELHI TRANSIT STACK
               </h1>
@@ -145,23 +124,11 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
               </p>
             </div>
 
-            {/* 3D / 2D Tilt Card Visual Showcase */}
-            <div
-              ref={cardRef}
-              onMouseMove={handleMouseMove}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={handleMouseLeave}
-              style={{
-                transform: `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(${
-                  isHovered ? 1.02 : 1
-                }, ${isHovered ? 1.02 : 1}, 1)`,
-                transition: isHovered ? 'transform 0.1s ease-out' : 'transform 0.4s ease-out',
-              }}
-              className="relative w-full rounded-2xl bg-[#0e1118] border border-[#222a3d] p-4 sm:p-5 shadow-[0_20px_50px_rgba(0,0,0,0.7)] group overflow-hidden"
-            >
+            {/* 3D Rotatable Bus Model Showcase Box */}
+            <div className="relative w-full rounded-2xl bg-[#0e1118] border border-[#222a3d] p-3 sm:p-4 shadow-[0_20px_50px_rgba(0,0,0,0.7)] group overflow-hidden">
               {/* Dynamic Neon Volt Glow Background */}
               <div
-                className="absolute inset-0 pointer-events-none rounded-2xl transition-opacity duration-300"
+                className="absolute inset-0 pointer-events-none rounded-2xl"
                 style={{
                   background:
                     'radial-gradient(circle at 50% 40%, rgba(204, 255, 0, 0.14) 0%, transparent 70%)',
@@ -169,38 +136,52 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
               />
 
               {/* Floating Status Badges Over Visual */}
-              <div className="flex items-center justify-between gap-2 mb-3 relative z-10">
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#141924]/90 border border-[#252f44] text-[11px] font-mono font-bold text-[#ccff00]">
+              <div className="flex items-center justify-between gap-2 mb-2 relative z-10 pointer-events-none">
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#141924]/90 border border-[#252f44] text-[11px] font-mono font-bold text-[#ccff00] pointer-events-auto">
                   <Users className="w-3.5 h-3.5" />
                   <span>72 ACTIVE FLEET</span>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#141924]/90 border border-[#252f44] text-[11px] font-mono font-bold text-white">
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#141924]/90 border border-[#252f44] text-[11px] font-mono font-bold text-white pointer-events-auto">
                   <span className="w-2 h-2 rounded-full bg-[#38bdf8] animate-ping" />
                   <span>98.4% GPS SYNC</span>
                 </div>
               </div>
 
-              {/* 3D/2D Bus Visual (delhi-bus-3d.png) */}
-              <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-[#07090e] border border-[#1b2232] flex items-center justify-center">
-                <img
-                  src="./images/delhi-bus-3d.png"
-                  alt="Delhi Transit 3D Electric Bus"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (target.src.indexOf('delhi-bus-3d.png') !== -1 && !target.dataset.triedFallback) {
-                      target.dataset.triedFallback = 'true';
-                      target.src = '/images/delhi-bus-3d.png';
-                    }
-                  }}
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
-                />
+              {/* Real-Time Interactive 3D Canvas Model */}
+              <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-[#07090e] border border-[#1b2232] cursor-grab active:cursor-grabbing">
+                <WebGLErrorBoundary
+                  fallback={
+                    <img
+                      src="./images/delhi-bus-3d.png"
+                      alt="Delhi Transit 3D Electric Bus"
+                      className="w-full h-full object-cover object-center"
+                    />
+                  }
+                >
+                  <Canvas camera={{ position: [0, 2.5, 6.2], fov: 42 }}>
+                    <ambientLight intensity={1.1} color="#e2e8f0" />
+                    <directionalLight position={[6, 9, 6]} intensity={2.6} color="#ffffff" />
+                    <directionalLight position={[-6, 5, -5]} intensity={1.4} color="#38bdf8" />
+                    <pointLight position={[-4, 3, -3]} intensity={2.0} color="#ccff00" />
+                    <pointLight position={[4, 1.5, 4]} intensity={1.5} color="#ccff00" />
 
-                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#0e1118] via-transparent to-transparent pointer-events-none" />
+                    <Suspense fallback={null}>
+                      <ElectricBusModel autoSpin={true} />
+                    </Suspense>
+
+                    <OrbitControls
+                      enablePan={false}
+                      minDistance={3.8}
+                      maxDistance={9.0}
+                      maxPolarAngle={Math.PI / 2.05}
+                    />
+                  </Canvas>
+                </WebGLErrorBoundary>
 
                 {/* Subtitle tag */}
-                <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-[#262c3e] text-[10px] font-mono text-slate-300">
-                  <Sparkles className="w-3 h-3 text-[#ccff00]" />
-                  <span>INTERACTIVE 3D &amp; 2D VISUAL STACK</span>
+                <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-[#262c3e] text-[10px] font-mono text-slate-300 pointer-events-none">
+                  <Compass className="w-3 h-3 text-[#ccff00] animate-spin" />
+                  <span>360° ROTATING ELECTRIC BUS MODEL • DRAG TO ROTATE</span>
                 </div>
               </div>
 

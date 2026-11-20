@@ -1,11 +1,4 @@
-import {
-  ContactShadows,
-  Float,
-  OrbitControls,
-  RoundedBox,
-  Text,
-  useGLTF,
-} from '@react-three/drei';
+import { ContactShadows, OrbitControls, Text } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
 import {
   ArrowUpRight,
@@ -30,7 +23,7 @@ interface ErrorBoundaryState {
   hasError: boolean;
 }
 
-class WebGLErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class WebGLErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
@@ -52,140 +45,268 @@ class WebGLErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryStat
   }
 }
 
-// --- Procedural 3D Delhi Electric Transit Bus Model ---
-export function ElectricBusModel() {
+// --- High-Fidelity 3D Delhi Electric Transit Bus Model ---
+export function ElectricBusModel({ autoSpin = true }: { autoSpin?: boolean }) {
   const busGroup = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
   const outerRingRef = useRef<THREE.Mesh>(null);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const t = state.clock.getElapsedTime();
+
     if (busGroup.current) {
-      busGroup.current.position.y = Math.sin(t * 1.5) * 0.06;
+      // Continuous 360 degree rotation
+      if (autoSpin) {
+        busGroup.current.rotation.y += delta * 0.35;
+      }
+      // Gentle levitation / engine float
+      busGroup.current.position.y = Math.sin(t * 1.6) * 0.04;
     }
+
     if (ringRef.current) {
-      ringRef.current.rotation.z = t * 0.25;
+      ringRef.current.rotation.z = t * 0.22;
     }
     if (outerRingRef.current) {
-      outerRingRef.current.rotation.z = -t * 0.15;
+      outerRingRef.current.rotation.z = -t * 0.14;
     }
   });
 
+  const bodyLength = 5.2;
+  const bodyWidth = 1.95;
+
   return (
-    <group position={[0, -0.3, 0]}>
-      {/* 3D Electric Delhi Bus Group */}
-      <group ref={busGroup} rotation={[0, -Math.PI / 4.5, 0]}>
-        {/* Main Bus Body */}
-        <RoundedBox args={[4.4, 1.35, 1.55]} radius={0.14} smoothness={4} position={[0, 0.85, 0]}>
-          <meshStandardMaterial color="#181b1f" metalness={0.85} roughness={0.2} />
-        </RoundedBox>
+    <group position={[0, -0.4, 0]}>
+      {/* Rotatable Bus Group */}
+      <group ref={busGroup} rotation={[0, -Math.PI / 4, 0]}>
+        {/* Lower Chassis Skirt (Dark Charcoal Graphite) */}
+        <mesh position={[0, 0.45, 0]} castShadow>
+          <boxGeometry args={[bodyWidth * 1.01, 0.38, bodyLength * 1.01]} />
+          <meshStandardMaterial color="#11141c" metalness={0.6} roughness={0.4} />
+        </mesh>
 
-        {/* Glowing Neon Lime Roof Cantrail Strip */}
-        <RoundedBox args={[4.2, 0.14, 1.58]} radius={0.04} smoothness={2} position={[0, 1.46, 0]}>
-          <meshStandardMaterial color="#ccff00" emissive="#ccff00" emissiveIntensity={1.6} />
-        </RoundedBox>
+        {/* Main Body Shell (Metallic Silver / Platinum Finish matching reference) */}
+        <mesh position={[0, 0.98, 0]} castShadow>
+          <boxGeometry args={[bodyWidth, 0.72, bodyLength * 0.98]} />
+          <meshStandardMaterial color="#c2cad6" metalness={0.88} roughness={0.22} />
+        </mesh>
 
-        {/* Side Passenger Tinted Panoramic Windows */}
-        <RoundedBox args={[3.5, 0.62, 1.57]} radius={0.06} smoothness={2} position={[-0.1, 0.92, 0]}>
+        {/* Aerodynamic Curved Front Nose */}
+        <mesh position={[0, 0.92, bodyLength / 2 - 0.15]} rotation={[0, 0, Math.PI / 2]} castShadow>
+          <cylinderGeometry args={[0.55, 0.55, bodyWidth, 24, 1, false, -Math.PI / 2, Math.PI / 2]} />
+          <meshStandardMaterial color="#c2cad6" metalness={0.88} roughness={0.22} />
+        </mesh>
+
+        {/* Panoramic Glass Greenhouse / Side Windows (Semi-transparent tinted glass) */}
+        <mesh position={[0, 1.58, 0]}>
+          <boxGeometry args={[bodyWidth * 0.96, 0.65, bodyLength * 0.94]} />
           <meshPhysicalMaterial
-            color="#090d11"
-            metalness={0.1}
-            roughness={0.05}
-            transmission={0.5}
-            opacity={0.9}
+            color="#091410"
+            metalness={0.15}
+            roughness={0.08}
+            transmission={0.7}
+            opacity={0.75}
             transparent
           />
-        </RoundedBox>
+        </mesh>
 
-        {/* Front Panoramic Windshield */}
-        <RoundedBox args={[0.12, 0.72, 1.38]} radius={0.04} smoothness={2} position={[2.18, 0.96, 0]}>
+        {/* Window Pillars (Black Frames) */}
+        {[-1.9, -1.0, -0.1, 0.8, 1.7].map((zPos, idx) => (
+          <mesh key={idx} position={[0, 1.58, zPos]}>
+            <boxGeometry args={[bodyWidth * 1.01, 0.65, 0.1]} />
+            <meshStandardMaterial color="#121620" metalness={0.5} roughness={0.3} />
+          </mesh>
+        ))}
+
+        {/* Aerodynamic Slanted Front Windshield */}
+        <mesh position={[0, 1.6, bodyLength / 2 - 0.08]} rotation={[0.16, 0, 0]}>
+          <boxGeometry args={[bodyWidth * 0.94, 0.75, 0.1]} />
           <meshPhysicalMaterial
-            color="#0b0f14"
-            metalness={0.2}
-            roughness={0.05}
+            color="#0b1a14"
+            metalness={0.1}
+            roughness={0.06}
             transparent
             opacity={0.85}
+            transmission={0.65}
           />
-        </RoundedBox>
-
-        {/* LED Front Destination Board: "DELHI TRANSIT" */}
-        <Text
-          position={[2.25, 1.18, 0]}
-          rotation={[0, Math.PI / 2, 0]}
-          fontSize={0.11}
-          color="#ccff00"
-          anchorX="center"
-          anchorY="middle"
-        >
-          DELHI TRANSIT
-        </Text>
-
-        {/* Side Destination LED: "SMARTTRANSIT AI • EV" */}
-        <Text
-          position={[0.2, 1.33, 0.8]}
-          fontSize={0.09}
-          color="#ccff00"
-          anchorX="center"
-          anchorY="middle"
-        >
-          SMARTTRANSIT AI • EV
-        </Text>
-
-        {/* Left LED Headlight */}
-        <mesh position={[2.21, 0.48, 0.52]}>
-          <boxGeometry args={[0.05, 0.1, 0.26]} />
-          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={2} />
         </mesh>
 
-        {/* Right LED Headlight */}
-        <mesh position={[2.21, 0.48, -0.52]}>
-          <boxGeometry args={[0.05, 0.1, 0.26]} />
-          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={2} />
+        {/* Rear Window */}
+        <mesh position={[0, 1.62, -bodyLength / 2 + 0.05]}>
+          <boxGeometry args={[bodyWidth * 0.9, 0.6, 0.08]} />
+          <meshPhysicalMaterial color="#0b1a14" metalness={0.1} roughness={0.1} transparent opacity={0.8} />
         </mesh>
 
-        {/* Lower Front Neon Volt Bumper Strip */}
-        <mesh position={[2.21, 0.36, 0]}>
-          <boxGeometry args={[0.05, 0.04, 0.9]} />
+        {/* Roof Structure (Metallic Silver) */}
+        <mesh position={[0, 1.98, 0]} castShadow>
+          <boxGeometry args={[bodyWidth, 0.18, bodyLength * 0.98]} />
+          <meshStandardMaterial color="#c2cad6" metalness={0.88} roughness={0.22} />
+        </mesh>
+
+        {/* Panoramic Glass Skylight on Roof */}
+        <mesh position={[0, 2.08, 0]}>
+          <boxGeometry args={[1.0, 0.04, bodyLength * 0.72]} />
+          <meshPhysicalMaterial color="#081812" transmission={0.65} opacity={0.7} transparent />
+        </mesh>
+
+        {/* Rooftop AC / Battery Enclosure (Dark Enclosure) */}
+        <mesh position={[0, 2.18, -0.8]} castShadow>
+          <boxGeometry args={[1.45, 0.24, 1.8]} />
+          <meshStandardMaterial color="#141822" roughness={0.4} />
+        </mesh>
+
+        {/* --- High-Contrast Neon Volt Cantrail Strips (Exact Reference Look) --- */}
+        {/* Left Roof Glow */}
+        <mesh position={[bodyWidth / 2 - 0.01, 1.98, 0]}>
+          <boxGeometry args={[0.05, 0.06, bodyLength * 0.96]} />
+          <meshStandardMaterial color="#ccff00" emissive="#ccff00" emissiveIntensity={2.4} />
+        </mesh>
+        {/* Right Roof Glow */}
+        <mesh position={[-bodyWidth / 2 + 0.01, 1.98, 0]}>
+          <boxGeometry args={[0.05, 0.06, bodyLength * 0.96]} />
+          <meshStandardMaterial color="#ccff00" emissive="#ccff00" emissiveIntensity={2.4} />
+        </mesh>
+
+        {/* Lower Chassis Skirt Glow Accent */}
+        <mesh position={[bodyWidth / 2 + 0.01, 0.64, 0]}>
+          <boxGeometry args={[0.03, 0.03, bodyLength * 0.85]} />
+          <meshStandardMaterial color="#ccff00" emissive="#ccff00" emissiveIntensity={1.8} />
+        </mesh>
+        <mesh position={[-bodyWidth / 2 - 0.01, 0.64, 0]}>
+          <boxGeometry args={[0.03, 0.03, bodyLength * 0.85]} />
           <meshStandardMaterial color="#ccff00" emissive="#ccff00" emissiveIntensity={1.8} />
         </mesh>
 
-        {/* 4 Wheels with Glowing Neon Volt Hub Accents */}
+        {/* --- Glowing 3D LED Destination Boards --- */}
+        {/* Front Destination LED: "DELHI TRANSIT" */}
+        <group position={[0, 1.95, bodyLength / 2 - 0.05]}>
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[1.35, 0.22, 0.05]} />
+            <meshBasicMaterial color="#060c06" />
+          </mesh>
+          <Text
+            position={[0, 0, 0.03]}
+            fontSize={0.12}
+            color="#ccff00"
+            anchorX="center"
+            anchorY="middle"
+          >
+            DELHI TRANSIT
+          </Text>
+        </group>
+
+        {/* Side Passenger LED Destination Board */}
+        <group position={[bodyWidth / 2 + 0.02, 1.9, 0.6]} rotation={[0, Math.PI / 2, 0]}>
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[1.2, 0.16, 0.02]} />
+            <meshBasicMaterial color="#060c06" />
+          </mesh>
+          <Text
+            position={[0, 0, 0.02]}
+            fontSize={0.08}
+            color="#ccff00"
+            anchorX="center"
+            anchorY="middle"
+          >
+            DELHI TRANSIT • EV
+          </Text>
+        </group>
+
+        {/* --- LED Headlights & Taillights --- */}
+        {/* Left LED Headlight */}
+        <mesh position={[0.65, 0.68, bodyLength / 2 - 0.02]}>
+          <boxGeometry args={[0.26, 0.08, 0.04]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={3} />
+        </mesh>
+        {/* Right LED Headlight */}
+        <mesh position={[-0.65, 0.68, bodyLength / 2 - 0.02]}>
+          <boxGeometry args={[0.26, 0.08, 0.04]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={3} />
+        </mesh>
+        {/* Lower Front Neon Volt Bumper Strip */}
+        <mesh position={[0, 0.42, bodyLength / 2 - 0.02]}>
+          <boxGeometry args={[1.2, 0.04, 0.04]} />
+          <meshStandardMaterial color="#ccff00" emissive="#ccff00" emissiveIntensity={2.2} />
+        </mesh>
+
+        {/* Rear Taillight LED Strips */}
+        <mesh position={[0.7, 0.85, -bodyLength / 2 + 0.02]}>
+          <boxGeometry args={[0.1, 0.35, 0.04]} />
+          <meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={2} />
+        </mesh>
+        <mesh position={[-0.7, 0.85, -bodyLength / 2 + 0.02]}>
+          <boxGeometry args={[0.1, 0.35, 0.04]} />
+          <meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={2} />
+        </mesh>
+
+        {/* --- Interior Green Passenger Seats (Visible Through Tinted Glass) --- */}
+        {[-1.8, -1.0, -0.2, 0.6, 1.4].map((zPos, idx) => (
+          <group key={idx}>
+            {/* Left Seat */}
+            <mesh position={[0.55, 1.25, zPos]}>
+              <boxGeometry args={[0.4, 0.42, 0.36]} />
+              <meshStandardMaterial color="#22c55e" roughness={0.6} />
+            </mesh>
+            {/* Right Seat */}
+            <mesh position={[-0.55, 1.25, zPos]}>
+              <boxGeometry args={[0.4, 0.42, 0.36]} />
+              <meshStandardMaterial color="#22c55e" roughness={0.6} />
+            </mesh>
+            {/* Grab Pole */}
+            <mesh position={[0.32, 1.55, zPos]}>
+              <cylinderGeometry args={[0.015, 0.015, 0.75]} />
+              <meshStandardMaterial color="#cbd5e1" metalness={0.9} roughness={0.2} />
+            </mesh>
+          </group>
+        ))}
+
+        {/* --- 4 Wheels with Glowing Neon Volt Hub Accents --- */}
         {[
-          [1.35, 0.32, 0.78],
-          [-1.35, 0.32, 0.78],
-          [1.35, 0.32, -0.78],
-          [-1.35, 0.32, -0.78],
-        ].map(([x, y, z], index) => (
-          <group key={index} position={[x, y, z]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.32, 0.32, 0.22, 32]} />
-            <meshStandardMaterial color="#0d0f12" roughness={0.6} />
-            <cylinderGeometry args={[0.19, 0.19, 0.24, 24]} />
-            <meshStandardMaterial color="#ccff00" emissive="#ccff00" emissiveIntensity={0.9} />
+          [bodyWidth / 2 + 0.03, 0.4, 1.7, true],
+          [-bodyWidth / 2 - 0.03, 0.4, 1.7, false],
+          [bodyWidth / 2 + 0.03, 0.4, -1.6, true],
+          [-bodyWidth / 2 - 0.03, 0.4, -1.6, false],
+        ].map(([x, y, z, isLeft], index) => (
+          <group key={index} position={[x as number, y as number, z as number]} rotation={[0, 0, Math.PI / 2]}>
+            {/* Black Rubber Tire */}
+            <cylinderGeometry args={[0.4, 0.4, 0.26, 32]} />
+            <meshStandardMaterial color="#0e1014" roughness={0.8} />
+
+            {/* Alloy Hub */}
+            <cylinderGeometry args={[0.27, 0.27, 0.28, 24]} />
+            <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.2} />
+
+            {/* Glowing Neon Volt Rim Ring Accent */}
+            <mesh position={[0, (isLeft ? 0.14 : -0.14), 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[0.23, 0.024, 16, 32]} />
+              <meshStandardMaterial color="#ccff00" emissive="#ccff00" emissiveIntensity={2.8} />
+            </mesh>
           </group>
         ))}
       </group>
 
-      {/* Holographic Concentric Radar Rings */}
-      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
-        <ringGeometry args={[2.5, 2.56, 64]} />
-        <meshBasicMaterial color="#ccff00" transparent opacity={0.45} side={THREE.DoubleSide} />
+      {/* --- Concentric Animated Holographic Radar Pedestal Floor --- */}
+      {/* Inner Radar Ring (Neon Volt #ccff00) */}
+      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+        <ringGeometry args={[2.4, 2.46, 64]} />
+        <meshBasicMaterial color="#ccff00" transparent opacity={0.5} side={THREE.DoubleSide} />
       </mesh>
 
-      <mesh ref={outerRingRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.03, 0]}>
-        <ringGeometry args={[3.1, 3.13, 64]} />
-        <meshBasicMaterial color="#4ade80" transparent opacity={0.25} side={THREE.DoubleSide} />
+      {/* Middle Cyan Telemetry Ring (#38bdf8) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.015, 0]}>
+        <ringGeometry args={[2.9, 2.93, 64]} />
+        <meshBasicMaterial color="#38bdf8" transparent opacity={0.3} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* Contact Shadow on Floor */}
-      <ContactShadows position={[0, -0.01, 0]} opacity={0.65} scale={10} blur={2.4} far={4} />
+      {/* Outer Radar Degree Ring (#ccff00) */}
+      <mesh ref={outerRingRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
+        <ringGeometry args={[3.45, 3.49, 64]} />
+        <meshBasicMaterial color="#ccff00" transparent opacity={0.35} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Soft Contact Floor Shadows */}
+      <ContactShadows position={[0, 0, 0]} opacity={0.7} scale={11} blur={2.4} far={4.5} />
     </group>
   );
-}
-
-// Optional GLB Custom Model Loader (supports public/models/delhi-transit-3d-bus.glb)
-export function CustomGLBBus() {
-  const { scene } = useGLTF('./models/delhi-transit-3d-bus.glb');
-  return <primitive object={scene} scale={1.2} position={[0, -0.3, 0]} />;
 }
 
 // --- Interactive 3D Tilt Card Fallback Component ---
@@ -211,7 +332,7 @@ export function VisualTiltCard({ onOpenMap, onToggleTo3D }: VisualTiltCardProps)
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
 
-    const rX = -((y - centerY) / centerY) * 12; // tilt max 12 deg
+    const rX = -((y - centerY) / centerY) * 12;
     const rY = ((x - centerX) / centerX) * 14;
 
     setRotateX(rX);
@@ -228,7 +349,6 @@ export function VisualTiltCard({ onOpenMap, onToggleTo3D }: VisualTiltCardProps)
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center p-4 sm:p-6 overflow-hidden">
-      {/* 3D Tilt Wrapper */}
       <div
         ref={cardRef}
         onMouseMove={handleMouseMove}
@@ -255,7 +375,7 @@ export function VisualTiltCard({ onOpenMap, onToggleTo3D }: VisualTiltCardProps)
         <div className="flex items-center justify-between gap-2 mb-3 relative z-10">
           <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-[#181d2a] border border-[#2a344d] text-[11px] font-mono font-bold text-[#ccff00]">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>HIGH-RES AI RENDER · DELHI EV</span>
+            <span>HIGH-RES RENDER · DELHI EV</span>
           </div>
 
           {onToggleTo3D && (
@@ -278,7 +398,6 @@ export function VisualTiltCard({ onOpenMap, onToggleTo3D }: VisualTiltCardProps)
             src="./images/delhi-bus-3d.png"
             alt="Delhi Transit Electric Bus 3D Render"
             onError={(e) => {
-              // Fallback to absolute or placeholder if relative path fails
               const target = e.currentTarget;
               if (target.src.indexOf('delhi-bus-3d.png') !== -1 && !target.dataset.triedFallback) {
                 target.dataset.triedFallback = 'true';
@@ -288,7 +407,6 @@ export function VisualTiltCard({ onOpenMap, onToggleTo3D }: VisualTiltCardProps)
             className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
           />
 
-          {/* Holographic Pedestal Glow */}
           <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#0a0c10] via-transparent to-transparent pointer-events-none" />
         </div>
 
@@ -403,7 +521,7 @@ export function Bus3DShowcase({
               className={`p-2 rounded-full border border-white/10 bg-[#121620]/90 backdrop-blur-md text-slate-300 hover:text-[#ccff00] hover:border-[#ccff00] transition-colors cursor-pointer ${
                 autoRotate ? 'text-[#ccff00] border-[#ccff00]/60' : ''
               }`}
-              title={autoRotate ? 'Pause Auto-Spin' : 'Auto-Spin 360°'}
+              title={autoRotate ? 'Pause 360° Auto-Spin' : 'Resume 360° Auto-Spin'}
             >
               <RotateCw className={`w-3.5 h-3.5 ${autoRotate ? 'animate-spin' : ''}`} />
             </button>
@@ -422,25 +540,22 @@ export function Bus3DShowcase({
               />
             }
           >
-            <Canvas camera={{ position: [0, 2.4, 6.2], fov: 42 }}>
-              <ambientLight intensity={0.9} color="#e2e8f0" />
-              <directionalLight position={[5, 8, 5]} intensity={2.2} color="#ffffff" />
-              <directionalLight position={[-5, 4, -4]} intensity={1.2} color="#38bdf8" />
-              <pointLight position={[-4, 3, -3]} intensity={1.8} color="#ccff00" />
-              <pointLight position={[3, 1, 3]} intensity={1.2} color="#ccff00" />
+            <Canvas camera={{ position: [0, 2.6, 6.4], fov: 42 }}>
+              {/* Studio Key & Ambient Lighting */}
+              <ambientLight intensity={1.1} color="#e2e8f0" />
+              <directionalLight position={[6, 9, 6]} intensity={2.6} color="#ffffff" castShadow />
+              <directionalLight position={[-6, 5, -5]} intensity={1.5} color="#38bdf8" />
+              <pointLight position={[-4, 3, -3]} intensity={2.0} color="#ccff00" />
+              <pointLight position={[4, 1.5, 4]} intensity={1.5} color="#ccff00" />
 
               <Suspense fallback={null}>
-                <Float speed={1.5} rotationIntensity={0.15} floatIntensity={0.3}>
-                  <ElectricBusModel />
-                </Float>
+                <ElectricBusModel autoSpin={autoRotate} />
               </Suspense>
 
               <OrbitControls
                 enablePan={false}
-                autoRotate={autoRotate}
-                autoRotateSpeed={1.2}
-                minDistance={4.0}
-                maxDistance={8.5}
+                minDistance={3.8}
+                maxDistance={9.0}
                 maxPolarAngle={Math.PI / 2.05}
               />
             </Canvas>
@@ -487,6 +602,6 @@ export function Bus3DShowcase({
   );
 }
 
-// Re-export as Rotatable3DBusStage to keep full compatibility with App.tsx
+// Re-export as Rotatable3DBusStage to keep full compatibility across the codebase
 export { Bus3DShowcase as Rotatable3DBusStage };
 export default Bus3DShowcase;
