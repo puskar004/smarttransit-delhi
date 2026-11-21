@@ -500,7 +500,7 @@ export function App() {
                     onClick={() => setShowMapInAllBuses(false)}
                     className="absolute top-4 right-4 z-[500] px-4 py-2 rounded-full bg-[#121620]/95 backdrop-blur-md border border-[#262c3e] hover:border-[#CCFF00] text-[#CCFF00] font-mono font-bold text-xs flex items-center gap-2 cursor-pointer shadow-xl transition-all"
                   >
-                    <span>VIEW 3D ROTATABLE BUS ↺</span>
+                    <span>SHOWCASE BUS VIEW ↺</span>
                   </button>
                 )}
 

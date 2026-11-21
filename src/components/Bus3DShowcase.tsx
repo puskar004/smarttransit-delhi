@@ -1,7 +1,6 @@
 import {
   ArrowUpRight,
   Clock,
-  Sparkles,
   Users,
 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
@@ -146,18 +145,19 @@ export function Bus3DShowcase({
           </div>
         </div>
 
-        {/* Bottom-Left Hint Pill */}
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#121620]/80 border border-[#232a3d] backdrop-blur-md absolute bottom-4 left-6 pointer-events-none text-[10.5px] font-mono text-slate-400 z-20">
-          <Sparkles className="w-3.5 h-3.5 text-[#ccff00]" />
-          <span>DELHI TRANSIT EV · TATA STARBUS AI FLEET</span>
-        </div>
-
         {/* Bottom-Right Floating Pill: REAL-TIME AI ETA */}
-        <div className="hidden sm:flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#121620]/90 border border-[#232a3d] backdrop-blur-md absolute bottom-4 right-6 pointer-events-none z-20 shadow-[0_8px_20px_rgba(0,0,0,0.6)]">
+        <div className="hidden sm:flex items-center gap-2 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-[#121620]/90 border border-[#232a3d] backdrop-blur-md absolute bottom-12 right-6 lg:right-10 pointer-events-none z-20 shadow-[0_8px_20px_rgba(0,0,0,0.6)]">
           <Clock className="w-3.5 h-3.5 text-[#ccff00]" />
           <span className="text-xs font-mono font-bold tracking-wider text-white">
             REAL-TIME AI ETA
           </span>
+        </div>
+
+        {/* Subtle 4-Point Sparkle Icon in lower right (matching reference screenshot) */}
+        <div className="hidden sm:block absolute bottom-4 right-14 pointer-events-none text-slate-500/40 z-10 select-none">
+          <svg className="w-8 h-8 fill-current" viewBox="0 0 24 24">
+            <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
+          </svg>
         </div>
       </div>
 
