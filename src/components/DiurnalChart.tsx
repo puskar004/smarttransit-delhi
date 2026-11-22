@@ -91,7 +91,7 @@ export function DiurnalChart({ segment, state, simHour }: DiurnalChartProps) {
         y={padT}
         width={xForHour(20.5) - xForHour(17.5)}
         height={plotH}
-        fill="#C4272F"
+        fill="#d97706"
         opacity="0.06"
       />
 

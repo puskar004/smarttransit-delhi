@@ -1,4 +1,5 @@
 import L from 'leaflet';
+import { Compass } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { DELHI_SEGMENTS, DELHI_STOPS, OPERATOR_META, STOP_BY_ID } from '../data/delhiNetwork';
 import { trafficLevelColor, trafficLevelLabel } from '../engine/trafficModel';
@@ -570,5 +571,25 @@ export function DelhiMap({
     map.flyToBounds(L.latLngBounds(coords).pad(0.9), { maxZoom: 14, duration: 0.5 });
   }, [selectedSegmentId, mode]);
 
-  return <div ref={containerRef} className="w-full h-full" />;
+  const handleRecenter = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.flyTo([28.568, 77.232], 12, { duration: 0.8 });
+  };
+
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      <div ref={containerRef} className="w-full h-full" />
+      {/* Floating Recenter Map Button */}
+      <button
+        type="button"
+        onClick={handleRecenter}
+        aria-label="Recenter map to central Delhi"
+        title="Recenter Map View"
+        className="absolute top-24 right-3 z-[400] w-8 h-8 rounded-lg bg-[#121620]/90 hover:bg-[#1a2130] border border-[#2b3348] hover:border-[#CCFF00] text-slate-300 hover:text-[#CCFF00] flex items-center justify-center transition-all shadow-lg backdrop-blur-md cursor-pointer"
+      >
+        <Compass className="w-4 h-4 stroke-[2.2]" />
+      </button>
+    </div>
+  );
 }

@@ -7,13 +7,15 @@ import {
   Clock,
   Compass,
   Footprints,
+  Loader2,
+  RotateCcw,
   Shield,
   Snowflake,
   Sparkles,
   Zap,
 } from 'lucide-react';
-import { useState } from 'react';
-import { DELHI_STOPS } from '../data/delhiNetwork';
+import { useEffect, useMemo, useState } from 'react';
+import { STOP_BY_ID } from '../data/delhiNetwork';
 import type { JourneyPreference, PlannedJourney, SimulatedBus } from '../types/transit';
 import {
   formatDistanceKm,
@@ -22,6 +24,7 @@ import {
   formatMinutesOnly,
 } from '../utils/format';
 import { RouteBadge } from './RouteBadge';
+import { StationAutocomplete } from './StationAutocomplete';
 
 interface JourneyPlannerTabProps {
   originStopId: string;
@@ -41,13 +44,11 @@ interface JourneyPlannerTabProps {
   onLiveTrackBus?: (vehicleId: string) => void;
 }
 
-const SORTED_STOPS = [...DELHI_STOPS].sort((a, b) => a.name.localeCompare(b.name));
-
 const POPULAR_DELHI_TRIPS = [
   { label: 'Okhla Ph-III ↔ AIIMS', from: 'iiit_delhi', to: 'aiims' },
-  { label: 'Nehru Place ↔ Anand Vihar', from: 'nehru_place', to: 'anand_vihar_isbt' },
-  { label: 'Hauz Khas ↔ Connaught Place', from: 'iit_main_gate', to: 'connaught_place' },
-  { label: 'Kashmere Gate ↔ Saket', from: 'kashmere_gate_isbt', to: 'saket_metro' },
+  { label: 'Nehru Place ↔ Anand Vihar', from: 'nehru_place', to: 'anand_vihar' },
+  { label: 'Hauz Khas ↔ Connaught Place', from: 'hauz_khas', to: 'connaught_place' },
+  { label: 'Kashmere Gate ↔ Saket', from: 'kashmere_gate', to: 'saket' },
 ];
 
 export function JourneyPlannerTab({
@@ -68,198 +69,345 @@ export function JourneyPlannerTab({
   onLiveTrackBus,
 }: JourneyPlannerTabProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [isSwapping, setIsSwapping] = useState(false);
+
+  // Check for same-origin error
+  const isSameEndpoint = Boolean(
+    originStopId && destinationStopId && originStopId === destinationStopId
+  );
+  const originStop = STOP_BY_ID[originStopId];
+  const destStop = STOP_BY_ID[destinationStopId];
+
+  // Brief smooth loading indicator when inputs change
+  useEffect(() => {
+    setIsCalculating(true);
+    const timer = setTimeout(() => {
+      setIsCalculating(false);
+    }, 280);
+    return () => clearTimeout(timer);
+  }, [originStopId, destinationStopId, preference]);
 
   const topPick = journeys.find((j) => j.isAiTopPick) ?? journeys[0];
 
   // Active buses on the selected journey route
-  const activeRouteIds = new Set(
-    (topPick ?? journeys[0])?.legs
-      .filter((l) => l.type === 'BUS' && l.routeId)
-      .map((l) => l.routeId) ?? []
+  const activeRouteIds = useMemo(() => {
+    return new Set(
+      (topPick ?? journeys[0])?.legs
+        .filter((l) => l.type === 'BUS' && l.routeId)
+        .map((l) => l.routeId) ?? []
+    );
+  }, [topPick, journeys]);
+
+  const routeBuses = useMemo(
+    () => buses.filter((b) => activeRouteIds.has(b.routeId)),
+    [buses, activeRouteIds]
   );
-  const routeBuses = buses.filter((b) => activeRouteIds.has(b.routeId));
+
+  const handleSwap = () => {
+    setIsSwapping(true);
+    onSwapEndpoints();
+    setTimeout(() => setIsSwapping(false), 300);
+  };
+
+  const handleReset = () => {
+    onChangeOrigin('iiit_delhi');
+    onChangeDestination('aiims');
+    onChangePreference('COMFORT');
+  };
 
   return (
-    <div className="flex flex-col h-full bg-[#000000] text-white font-sans select-none">
-      {/* 1. Sleek Search Header (Streetwear / Editorial Brutalist) */}
-      <div className="p-4 sm:p-5 bg-[#0A0A0A] border-b border-[#222222] space-y-3.5">
+    <div className="flex flex-col h-full bg-[#07090e] text-white font-sans select-none overflow-hidden">
+      {/* 1. SEARCH & ENDPOINTS PANEL */}
+      <div className="p-3.5 sm:p-5 bg-[#0c0e14] border-b border-[#1c2232] space-y-3.5 shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono font-bold tracking-widest text-[#CCFF00] uppercase">
                 THE TRANSIT RADAR / 002
               </span>
-              <span className="text-[9.5px] px-1.5 py-0.2 bg-[#1C1C1C] text-[#CCFF00] font-mono font-bold border border-[#333333] uppercase">
-                CROWD + ETA FUSION
+              <span className="text-[9.5px] px-2 py-0.5 rounded-full bg-[#151923] text-[#CCFF00] font-mono font-bold border border-[#252c3e] uppercase">
+                CROWD + DELAY FUSION
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-white mt-0.5">
+            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white mt-1">
               PLAN COMMUTE.
             </h2>
-          </div>
-          <span className="text-[11px] font-mono text-[#8E8E93]">
-            DELHI AVLS GPS
-          </span>
-        </div>
-
-        {/* Input Pair */}
-        <div className="flex items-center gap-2">
-          <div className="flex flex-col items-center gap-1 shrink-0 py-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#CCFF00] shadow-[0_0_8px_#CCFF00]" />
-            <span className="w-0.5 h-6 bg-[#333333]" />
-            <span className="w-2.5 h-2.5 rounded-full bg-white shadow-[0_0_8px_white]" />
-          </div>
-
-          <div className="flex-1 space-y-2 min-w-0">
-            <select
-              aria-label="Starting stop"
-              value={originStopId}
-              onChange={(e) => onChangeOrigin(e.target.value)}
-              className="w-full h-9.5 px-3 text-xs font-semibold bg-[#111111] hover:bg-[#161616] border border-[#262626] focus:border-[#CCFF00] text-white focus:outline-none transition-colors truncate cursor-pointer uppercase tracking-wide"
-            >
-              {SORTED_STOPS.map((stop) => (
-                <option key={stop.id} value={stop.id} className="bg-[#111111] text-white">
-                  FROM: {stop.name.toUpperCase()}
-                </option>
-              ))}
-            </select>
-
-            <select
-              aria-label="Destination stop"
-              value={destinationStopId}
-              onChange={(e) => onChangeDestination(e.target.value)}
-              className="w-full h-9.5 px-3 text-xs font-semibold bg-[#111111] hover:bg-[#161616] border border-[#262626] focus:border-[#CCFF00] text-white focus:outline-none transition-colors truncate cursor-pointer uppercase tracking-wide"
-            >
-              {SORTED_STOPS.map((stop) => (
-                <option key={stop.id} value={stop.id} className="bg-[#111111] text-white">
-                  TO: {stop.name.toUpperCase()}
-                </option>
-              ))}
-            </select>
           </div>
 
           <button
             type="button"
-            onClick={onSwapEndpoints}
-            title="Swap Origin and Destination"
-            className="h-10 w-10 shrink-0 border border-[#262626] bg-[#111111] hover:border-[#CCFF00] text-[#8E8E93] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            onClick={handleReset}
+            title="Reset to default stops"
+            aria-label="Reset search to defaults"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-mono font-bold text-slate-400 hover:text-white bg-[#121620] hover:bg-[#181d2a] border border-[#232a3d] transition-colors cursor-pointer"
           >
-            <ArrowUpDown className="w-4 h-4" />
+            <RotateCcw className="w-3 h-3" />
+            <span className="hidden sm:inline">RESET</span>
           </button>
         </div>
 
-        {/* Quick Route Presets (SNKS pill style) */}
-        <div className="flex flex-wrap gap-1.5">
-          {POPULAR_DELHI_TRIPS.map((preset) => {
-            const isActive = originStopId === preset.from && destinationStopId === preset.to;
-            return (
+        {/* Origin / Destination Accessible Inputs + Swap Button */}
+        <div className="space-y-2.5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div className="flex-1 space-y-2.5">
+              {/* Origin Autocomplete */}
+              <StationAutocomplete
+                label="FROM (ORIGIN)"
+                sublabel={originStop?.zone}
+                value={originStopId}
+                onChange={onChangeOrigin}
+                isOrigin={true}
+                placeholder="Type starting stop or metro station..."
+                error={
+                  isSameEndpoint
+                    ? 'Origin and destination cannot be the same'
+                    : undefined
+                }
+              />
+
+              {/* Destination Autocomplete */}
+              <StationAutocomplete
+                label="TO (DESTINATION)"
+                sublabel={destStop?.zone}
+                value={destinationStopId}
+                onChange={onChangeDestination}
+                isOrigin={false}
+                placeholder="Type arrival stop or metro station..."
+                error={
+                  isSameEndpoint
+                    ? 'Please choose a different arrival stop'
+                    : undefined
+                }
+              />
+            </div>
+
+            {/* Swap Button (Min 44px for Mobile Touch Accessibility) */}
+            <div className="flex sm:flex-col items-center justify-center shrink-0 pt-1 sm:pt-5">
               <button
-                key={preset.label}
                 type="button"
-                onClick={() => {
-                  onChangeOrigin(preset.from);
-                  onChangeDestination(preset.to);
-                }}
-                className={`text-[10.5px] px-2.5 py-1 uppercase font-bold tracking-wider border transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-[#CCFF00] border-[#CCFF00] text-black font-black'
-                    : 'bg-[#111111] border-[#262626] text-[#8E8E93] hover:text-white hover:border-[#444444]'
+                onClick={handleSwap}
+                aria-label="Swap starting and destination stops"
+                title="Swap Origin and Destination"
+                className={`w-full sm:w-11 h-11 rounded-xl border border-[#262c3e] hover:border-[#CCFF00] bg-[#121620] hover:bg-[#181e2b] text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-95 ${
+                  isSwapping ? 'rotate-180 scale-105' : ''
                 }`}
               >
-                {preset.label}
+                <ArrowUpDown className="w-4 h-4 text-[#CCFF00]" />
+                <span className="sm:hidden ml-2 text-xs font-mono font-bold text-white uppercase">
+                  Swap Stops
+                </span>
               </button>
-            );
-          })}
+            </div>
+          </div>
         </div>
 
-        {/* Filter Modes (Category Toggles) */}
-        <div className="grid grid-cols-4 gap-1 p-1 bg-[#111111] border border-[#262626] text-[11px]">
-          {(
-            [
-              { id: 'FASTEST', label: '⚡ FASTEST' },
-              { id: 'COMFORT', label: '💺 COMFORT' },
-              { id: 'AC_ONLY', label: '❄️ AC ONLY' },
-              { id: 'DIRECT', label: '🚌 DIRECT' },
-            ] as const
-          ).map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onChangePreference(item.id)}
-              className={`py-1.5 transition-all text-center font-black uppercase tracking-wider cursor-pointer ${
-                preference === item.id
-                  ? 'bg-[#CCFF00] text-black shadow-sm'
-                  : 'text-[#8E8E93] hover:text-white'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+        {/* Quick Route Presets */}
+        <div className="space-y-1.5 pt-0.5">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+            POPULAR COMMUTE CORRIDORS
+          </span>
+          <div className="flex flex-wrap gap-1.5">
+            {POPULAR_DELHI_TRIPS.map((preset) => {
+              const isActive =
+                originStopId === preset.from && destinationStopId === preset.to;
+              return (
+                <button
+                  key={preset.label}
+                  type="button"
+                  onClick={() => {
+                    onChangeOrigin(preset.from);
+                    onChangeDestination(preset.to);
+                  }}
+                  aria-pressed={isActive}
+                  className={`text-[10.5px] px-3 py-1.5 rounded-full font-mono font-bold uppercase tracking-wider border transition-all cursor-pointer min-h-[32px] flex items-center ${
+                    isActive
+                      ? 'bg-[#CCFF00] border-[#CCFF00] text-black font-black shadow-sm'
+                      : 'bg-[#121620] border-[#222a3d] text-slate-300 hover:text-white hover:border-[#38435d]'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Preference Filter Category Bar */}
+        <div className="space-y-1 pt-1">
+          <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 uppercase">
+            <span>ROUTING PREFERENCE</span>
+            <span className="text-[#CCFF00]">KALMAN OPTIMIZED</span>
+          </div>
+
+          <div className="grid grid-cols-4 gap-1 p-1 rounded-xl bg-[#121620] border border-[#222838] text-[11px]">
+            {(
+              [
+                { id: 'FASTEST', label: '⚡ FASTEST' },
+                { id: 'COMFORT', label: '💺 COMFORT' },
+                { id: 'AC_ONLY', label: '❄️ AC EV' },
+                { id: 'DIRECT', label: '🚌 DIRECT' },
+              ] as const
+            ).map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onChangePreference(item.id)}
+                aria-pressed={preference === item.id}
+                className={`py-2 rounded-lg transition-all text-center font-mono font-bold uppercase tracking-wider cursor-pointer text-xs ${
+                  preference === item.id
+                    ? 'bg-[#CCFF00] text-black font-black shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Active Traffic Alert Bar (NO RED — Warm Amber) */}
+      {/* 2. ACTIVE TRAFFIC ALERT BAR (Warm Amber — NO RED) */}
       {activeJamCount > 0 && (
-        <div className="mx-4 mt-3 px-3.5 py-2.5 bg-[#141414] border border-[#FFB800] flex items-center justify-between gap-2 text-xs text-white">
-          <span className="inline-flex items-center gap-1.5 font-bold">
-            <AlertCircle className="w-4 h-4 text-[#FFB800] shrink-0" />
-            <span className="text-[#FFB800]">{activeJamCount} active Delhi bottleneck{activeJamCount > 1 ? 's' : ''}</span> auto-rerouted
+        <div className="mx-3.5 sm:mx-4 mt-3 px-3.5 py-2.5 rounded-xl bg-[#18150d] border border-[#f59e0b]/50 flex items-center justify-between gap-2 text-xs text-white shrink-0">
+          <span className="inline-flex items-center gap-2 font-medium">
+            <AlertCircle className="w-4 h-4 text-[#f59e0b] shrink-0" />
+            <span>
+              <strong className="text-[#f59e0b]">{activeJamCount} active Delhi bottleneck{activeJamCount > 1 ? 's' : ''}</strong> auto-rerouted
+            </span>
           </span>
           <button
             type="button"
             onClick={onOpenTrafficMode}
-            className="text-[11px] font-black uppercase text-[#CCFF00] hover:underline shrink-0 cursor-pointer"
+            className="text-[11px] font-mono font-black uppercase text-[#CCFF00] hover:underline shrink-0 cursor-pointer"
           >
             Radar Map ↗
           </button>
         </div>
       )}
 
-      {/* Results Stream */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {journeys.length === 0 ? (
-          <div className="bg-[#0E0E0E] border border-[#222222] p-8 text-center text-xs text-[#8E8E93] uppercase font-bold tracking-wider">
-            Select two distinct Delhi stops to see AI-optimized routes.
+      {/* 3. RESULTS STREAM WITH ERROR & LOADING STATES */}
+      <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 no-scrollbar">
+        {/* Loading State */}
+        {isCalculating ? (
+          <div className="py-14 text-center space-y-3">
+            <Loader2 className="w-8 h-8 text-[#CCFF00] animate-spin mx-auto" />
+            <p className="text-xs font-mono font-bold uppercase tracking-wider text-white">
+              Finding Optimal Transit Routes...
+            </p>
+            <p className="text-[11px] text-slate-400 font-mono">
+              Analyzing DTC bus live loads &amp; road speeds
+            </p>
+          </div>
+        ) : isSameEndpoint ? (
+          /* Error State: Same Origin & Destination */
+          <div className="p-6 rounded-2xl bg-[#18150d] border border-[#f59e0b]/60 text-center space-y-3">
+            <div className="w-10 h-10 rounded-full bg-[#f59e0b]/15 text-[#f59e0b] flex items-center justify-center mx-auto">
+              <AlertCircle className="w-6 h-6 stroke-[2.2]" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-white uppercase font-mono tracking-wide">
+                Identical Starting &amp; Arrival Stop
+              </h3>
+              <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                Origin and destination are both set to <strong className="text-white">{originStop?.name || 'the same stop'}</strong>.
+                Please select a different arrival station or choose a recommended trip below.
+              </p>
+            </div>
+            <div className="pt-2 flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => onChangeDestination('aiims')}
+                className="px-4 py-2 rounded-xl bg-[#CCFF00] text-black font-mono font-bold text-xs uppercase cursor-pointer hover:bg-[#d8ff33]"
+              >
+                Go to AIIMS Ring Road ↗
+              </button>
+              <button
+                type="button"
+                onClick={() => onChangeDestination('nehru_place')}
+                className="px-4 py-2 rounded-xl bg-[#181d2a] border border-[#2b3348] text-white font-mono font-bold text-xs uppercase cursor-pointer hover:border-[#CCFF00]"
+              >
+                Go to Nehru Place ↗
+              </button>
+            </div>
+          </div>
+        ) : journeys.length === 0 ? (
+          /* Empty / No Route Found State */
+          <div className="p-6 sm:p-8 rounded-2xl bg-[#10141e] border border-[#222a3d] text-center space-y-3">
+            <div className="w-10 h-10 rounded-full bg-[#181e2c] text-slate-400 flex items-center justify-center mx-auto">
+              <Compass className="w-5 h-5 text-[#CCFF00]" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-white uppercase font-mono tracking-wide">
+                No Direct or 1-Transfer Route Found
+              </h3>
+              <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+                No modeled DTC bus route connects <strong className="text-white">{originStop?.name}</strong> to <strong className="text-white">{destStop?.name}</strong> directly.
+              </p>
+              <p className="text-[11px] font-mono text-slate-400 pt-1">
+                Tip: Try routing through major multi-modal transit hubs like <strong className="text-[#CCFF00]">Nehru Place</strong>, <strong className="text-[#CCFF00]">Ashram Chowk</strong>, or <strong className="text-[#CCFF00]">Kashmere Gate</strong>.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={handleReset}
+                className="px-4 py-2 rounded-xl bg-[#CCFF00] text-black font-mono font-black text-xs uppercase cursor-pointer hover:bg-[#d8ff33]"
+              >
+                Load Recommended Route (Okhla ↔ AIIMS)
+              </button>
+            </div>
           </div>
         ) : (
+          /* Route Results Cards */
           <>
             {/* FEATURED: AI SMART RECOMMENDATION HERO BILLBOARD */}
             {topPick && (
               <div
                 onClick={() => onSelectJourney(topPick.id)}
-                className="relative overflow-hidden bg-[#0E0E0E] border-2 border-[#CCFF00] p-4.5 cursor-pointer transition-all hover:bg-[#141414] shadow-[0_0_25px_rgba(204,255,0,0.18)]"
+                className="relative overflow-hidden rounded-2xl bg-[#10141e] hover:bg-[#131824] border-2 border-[#CCFF00] p-4 sm:p-5 cursor-pointer transition-all shadow-[0_0_25px_rgba(204,255,0,0.18)]"
               >
                 <div className="space-y-3">
-                  {/* Top Match Tag */}
-                  <div className="flex items-center justify-between">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#CCFF00] text-black text-[10.5px] font-black tracking-wider uppercase">
+                  {/* Top Match Tag & Live Status Indicator */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#CCFF00] text-black text-[10.5px] font-black tracking-wider uppercase">
                       <Zap className="w-3.5 h-3.5 fill-current" />
                       TOP PICK · {topPick.matchScorePercent}% MATCH
                     </div>
 
-                    <div className="text-[11.5px] font-mono font-bold text-[#CCFF00] flex items-center gap-1">
-                      <Shield className="w-3.5 h-3.5" />
-                      {topPick.seatProbabilityPercent}% SEAT CHANCE
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#1b2b1e] text-[#4ade80] border border-[#2a4d31]">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" />
+                        LIVE GPS CALIBRATED
+                      </span>
+                      <div className="text-[11.5px] font-mono font-bold text-[#CCFF00] flex items-center gap-1">
+                        <Shield className="w-3.5 h-3.5" />
+                        {topPick.seatProbabilityPercent}% SEAT CHANCE
+                      </div>
                     </div>
                   </div>
 
                   {/* Big Route Headline */}
                   <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {topPick.routeBadges.map((rb, idx) => (
                           <span key={idx} className="inline-flex items-center gap-1">
-                            {idx > 0 && <span className="text-[#666666] text-sm">→</span>}
+                            {idx > 0 && <span className="text-slate-500 text-sm">→</span>}
                             <RouteBadge shortName={rb.shortName} operator={rb.operator} size="md" />
                           </span>
                         ))}
                         {topPick.hasAc && (
-                          <span className="inline-flex items-center gap-1 text-[10.5px] text-[#CCFF00] bg-[#1A1A1A] px-2 py-0.5 border border-[#333333] font-mono font-bold uppercase">
+                          <span className="inline-flex items-center gap-1 text-[10.5px] text-[#CCFF00] bg-[#1a2130] px-2 py-0.5 rounded-full border border-[#2d3852] font-mono font-bold uppercase">
                             <Snowflake className="w-3 h-3" /> AC ELECTRIC
                           </span>
                         )}
+                        <span className="text-[10px] font-mono text-slate-400">
+                          {topPick.transfers === 0 ? 'DIRECT (0 TRANSFERS)' : '1 TRANSFER'}
+                        </span>
                       </div>
-                      <h3 className="text-base font-black uppercase tracking-tight text-white mt-1.5">
+                      <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-white">
                         {topPick.summaryTitle}
                       </h3>
                     </div>
@@ -267,17 +415,17 @@ export function JourneyPlannerTab({
                     <div className="text-right shrink-0">
                       <div className="text-3xl font-black leading-none text-white tracking-tighter">
                         {formatMinutesOnly(topPick.predictedTotalSec)}
-                        <span className="text-xs font-bold text-[#8E8E93] ml-0.5">MIN</span>
+                        <span className="text-xs font-bold text-slate-400 ml-0.5">MIN</span>
                       </div>
-                      <div className="text-[11px] font-mono text-[#8E8E93] mt-0.5 uppercase">
+                      <div className="text-[11px] font-mono text-slate-400 mt-1 uppercase">
                         ARRIVES {formatEtaTime(simTimeMs, topPick.predictedTotalSec)}
                       </div>
                     </div>
                   </div>
 
-                  {/* AI Decision Reasoning Card */}
+                  {/* AI Recommendation Reasoning Card */}
                   {topPick.aiRecommendationReason && (
-                    <div className="p-3 bg-[#141414] border border-[#222222] text-xs leading-relaxed text-[#D1D1D6]">
+                    <div className="p-3 rounded-xl bg-[#141824] border border-[#232b3d] text-xs leading-relaxed text-slate-200">
                       <span className="text-[#CCFF00] font-black mr-1 inline-flex items-center gap-1 uppercase tracking-wider">
                         <Sparkles className="w-3.5 h-3.5 text-[#CCFF00]" /> REASON:
                       </span>
@@ -285,17 +433,17 @@ export function JourneyPlannerTab({
                     </div>
                   )}
 
-                  {/* Metrics Bar: Crowd Meter + Fare */}
+                  {/* Metrics Bar: Crowd Meter + Fare + Distance */}
                   <div className="grid grid-cols-3 gap-2 pt-1 text-[11px]">
-                    <div className="bg-[#141414] p-2 border border-[#222222]">
-                      <div className="text-[9px] uppercase font-mono font-bold text-[#666666]">CROWD LOAD</div>
+                    <div className="bg-[#141824] p-2.5 rounded-xl border border-[#222a3d]">
+                      <div className="text-[9px] uppercase font-mono font-bold text-slate-400">CROWD LOAD</div>
                       <div className="font-bold mt-0.5 flex items-center gap-1.5">
                         <span
                           className={`w-2 h-2 rounded-full ${
                             topPick.crowdLevel === 'LOW'
                               ? 'bg-[#CCFF00]'
                               : topPick.crowdLevel === 'MEDIUM'
-                                ? 'bg-[#FFB800]'
+                                ? 'bg-[#f59e0b]'
                                 : 'bg-white'
                           }`}
                         />
@@ -306,19 +454,19 @@ export function JourneyPlannerTab({
                               ? 'Moderate'
                               : 'High Load'}
                         </span>
-                        <span className="text-[#666666] font-mono">({topPick.occupancyPercent}%)</span>
+                        <span className="text-slate-400 font-mono">({topPick.occupancyPercent}%)</span>
                       </div>
                     </div>
 
-                    <div className="bg-[#141414] p-2 border border-[#222222]">
-                      <div className="text-[9px] uppercase font-mono font-bold text-[#666666]">NEXT BUS</div>
+                    <div className="bg-[#141824] p-2.5 rounded-xl border border-[#222a3d]">
+                      <div className="text-[9px] uppercase font-mono font-bold text-slate-400">NEXT BUS WAIT</div>
                       <div className="font-bold mt-0.5 text-[#CCFF00] font-mono uppercase text-[10.5px]">
                         IN {formatDurationMin(topPick.nextBusWaitSec)}
                       </div>
                     </div>
 
-                    <div className="bg-[#141414] p-2 border border-[#222222] text-right">
-                      <div className="text-[9px] uppercase font-mono font-bold text-[#666666]">FARE · DIST</div>
+                    <div className="bg-[#141824] p-2.5 rounded-xl border border-[#222a3d] text-right">
+                      <div className="text-[9px] uppercase font-mono font-bold text-slate-400">DTC FARE · DIST</div>
                       <div className="font-bold mt-0.5 text-white font-mono uppercase text-[10.5px]">
                         ₹{topPick.totalFareInr} · {formatDistanceKm(topPick.totalDistanceMeters)}
                       </div>
@@ -335,7 +483,7 @@ export function JourneyPlannerTab({
                         onLiveTrackBus(bestBus.vehicleId);
                       }
                     }}
-                    className="w-full mt-2.5 py-2.5 bg-[#CCFF00] hover:bg-[#B8E600] text-black font-black uppercase tracking-wider text-xs inline-flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+                    className="w-full mt-2.5 py-3 rounded-xl bg-[#CCFF00] hover:bg-[#d8ff33] text-black font-sans font-black uppercase tracking-wider text-xs inline-flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-[0.99]"
                   >
                     <Compass className="w-4 h-4 stroke-[2.5]" />
                     <span>Live Track Bus on Delhi Map ↗</span>
@@ -344,13 +492,13 @@ export function JourneyPlannerTab({
               </div>
             )}
 
-            {/* LIVE SECTION: BUSES RUNNING RIGHT NOW ON THIS ROUTE */}
+            {/* LIVE SENSORS: BUSES ACTIVE ON THIS ROUTE */}
             {routeBuses.length > 0 && (
-              <div className="bg-[#0E0E0E] border border-[#222222] p-3.5 sm:p-4 space-y-3">
+              <div className="bg-[#0e1118] border border-[#222a3d] rounded-2xl p-3.5 sm:p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse" />
-                    <span className="text-xs font-black uppercase tracking-wider text-white">
+                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-white">
                       CORRIDOR BUSES ACTIVE NOW
                     </span>
                   </div>
@@ -370,26 +518,26 @@ export function JourneyPlannerTab({
                     return (
                       <div
                         key={bus.vehicleId}
-                        className="p-3 bg-[#141414] border border-[#222222] flex items-center justify-between gap-3 hover:border-[#CCFF00] transition-all"
+                        className="p-3 rounded-xl bg-[#121620] border border-[#222838] flex items-center justify-between gap-3 hover:border-[#CCFF00] transition-all"
                       >
                         <div className="min-w-0 space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-mono font-extrabold text-xs text-white">
+                            <span className="font-mono font-bold text-xs text-white">
                               BUS {bus.routeShortName} ({bus.vehicleId})
                             </span>
                             <span
-                              className={`text-[9.5px] font-mono font-bold px-1.5 py-0.2 uppercase ${
+                              className={`text-[9.5px] font-mono font-bold px-2 py-0.5 rounded-full uppercase ${
                                 isOnTime
-                                  ? 'bg-[#CCFF00] text-black'
+                                  ? 'bg-[#1b2b1e] text-[#4ade80] border border-[#2a4d31]'
                                   : isDelayed
-                                    ? 'bg-[#FFB800] text-black'
-                                    : 'bg-white text-black'
+                                    ? 'bg-[#2b2413] text-[#f59e0b] border border-[#4d3d19]'
+                                    : 'bg-[#151923] text-white border border-[#283248]'
                               }`}
                             >
                               {isOnTime ? 'ON TIME' : isDelayed ? `+${delayMin}M LATE` : `EARLY`}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2 text-[11px] text-[#8E8E93]">
+                          <div className="flex items-center gap-2 text-[11px] text-slate-400">
                             <span>
                               NEXT: <b className="text-white uppercase">{bus.nextStopName}</b> (~{Math.max(1, Math.round(bus.etaNextStopSec / 60))}M)
                             </span>
@@ -403,7 +551,7 @@ export function JourneyPlannerTab({
                         <button
                           type="button"
                           onClick={() => onLiveTrackBus && onLiveTrackBus(bus.vehicleId)}
-                          className="px-3.5 py-1.5 bg-[#CCFF00] hover:bg-[#B8E600] text-black text-[11px] font-black uppercase tracking-wider inline-flex items-center gap-1 transition-all cursor-pointer shrink-0"
+                          className="px-3.5 py-1.5 rounded-lg bg-[#CCFF00] hover:bg-[#d8ff33] text-black text-[11px] font-sans font-black uppercase tracking-wider inline-flex items-center gap-1 transition-all cursor-pointer shrink-0"
                         >
                           <Compass className="w-3 h-3 stroke-[2.5]" />
                           <span>Track ↗</span>
@@ -415,11 +563,11 @@ export function JourneyPlannerTab({
               </div>
             )}
 
-            {/* CATEGORY RAIL: ALL AVAILABLE OPTIONS */}
+            {/* ALTERNATIVE ITINERARIES */}
             <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between text-xs font-bold text-[#8E8E93] px-1 uppercase tracking-wider font-mono">
-                <span>ALTERNATIVE ITINERARIES</span>
-                <span className="text-[10px] text-[#555555]">SORTED: {preference}</span>
+              <div className="flex items-center justify-between text-xs font-bold text-slate-400 px-1 uppercase tracking-wider font-mono">
+                <span>ALTERNATIVE ITINERARIES ({journeys.length})</span>
+                <span className="text-[10px] text-slate-500">SORTED: {preference}</span>
               </div>
 
               {journeys.map((j) => {
@@ -431,48 +579,48 @@ export function JourneyPlannerTab({
                   <div
                     key={j.id}
                     onClick={() => onSelectJourney(j.id)}
-                    className={`transition-all cursor-pointer border ${
+                    className={`rounded-2xl transition-all cursor-pointer border ${
                       isSelected
-                        ? 'bg-[#141414] border-[#CCFF00] shadow-[0_0_15px_rgba(204,255,0,0.15)]'
-                        : 'bg-[#0E0E0E] border-[#222222] hover:border-[#444444]'
+                        ? 'bg-[#121622] border-[#CCFF00] shadow-[0_0_15px_rgba(204,255,0,0.15)]'
+                        : 'bg-[#0e1118] border-[#222a3d] hover:border-[#38435d]'
                     }`}
                   >
-                    <div className="p-3.5 space-y-3">
-                      {/* Card Header: Route + Match + Time */}
+                    <div className="p-3.5 sm:p-4 space-y-3">
+                      {/* Card Header */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="space-y-1.5 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {j.routeBadges.map((rb, idx) => (
                               <span key={idx} className="inline-flex items-center gap-1">
-                                {idx > 0 && <span className="text-[#666666] text-xs">→</span>}
+                                {idx > 0 && <span className="text-slate-500 text-xs">→</span>}
                                 <RouteBadge shortName={rb.shortName} operator={rb.operator} size="sm" />
                               </span>
                             ))}
 
-                            <span className="text-[10px] font-mono font-bold text-black bg-[#CCFF00] px-1.5 py-0.2 uppercase">
+                            <span className="text-[10px] font-mono font-bold text-black bg-[#CCFF00] px-2 py-0.5 rounded-full uppercase">
                               {j.matchScorePercent}% MATCH
                             </span>
 
                             {j.tags.map((tag) => (
                               <span
                                 key={tag}
-                                className="text-[9.5px] font-mono uppercase text-[#8E8E93] bg-[#161616] px-1.5 py-0.2 border border-[#262626]"
+                                className="text-[9.5px] font-mono uppercase text-slate-300 bg-[#151923] px-2 py-0.5 rounded-full border border-[#273045]"
                               >
                                 {tag}
                               </span>
                             ))}
                           </div>
-                          <div className="text-xs text-[#8E8E93] truncate uppercase">{j.summaryTitle}</div>
+                          <div className="text-xs text-slate-400 truncate uppercase">{j.summaryTitle}</div>
                         </div>
 
                         <div className="text-right shrink-0">
                           <div className="text-2xl font-black text-white leading-none tracking-tight">
                             {formatMinutesOnly(j.predictedTotalSec)}
-                            <span className="text-xs font-normal text-[#8E8E93] ml-0.5">MIN</span>
+                            <span className="text-xs font-normal text-slate-400 ml-0.5">MIN</span>
                           </div>
                           <div
                             className={`text-[10px] font-mono mt-1 font-bold uppercase ${
-                              isDelay ? 'text-[#FFB800]' : 'text-[#CCFF00]'
+                              isDelay ? 'text-[#f59e0b]' : 'text-[#4ade80]'
                             }`}
                           >
                             {isDelay
@@ -482,28 +630,29 @@ export function JourneyPlannerTab({
                         </div>
                       </div>
 
-                      {/* Passenger Crowdedness Bar */}
+                      {/* Crowdedness Meter Bar */}
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-[#8E8E93] flex items-center gap-1.5 uppercase font-medium">
+                          <span className="text-slate-300 flex items-center gap-1.5 uppercase font-medium">
                             <span
                               className={`w-2 h-2 rounded-full ${
                                 j.crowdLevel === 'LOW'
                                   ? 'bg-[#CCFF00]'
                                   : j.crowdLevel === 'MEDIUM'
-                                    ? 'bg-[#FFB800]'
+                                    ? 'bg-[#f59e0b]'
                                     : 'bg-white'
                               }`}
                             />
                             <b>{j.crowdLevel === 'LOW' ? 'Low Crowd' : j.crowdLevel === 'MEDIUM' ? 'Moderate' : 'Heavy Load'}</b>
-                            <span className="text-[#555555] font-mono">({j.occupancyPercent}%)</span>
+                            <span className="text-slate-500 font-mono">({j.occupancyPercent}%)</span>
                           </span>
+
                           <span className="text-[#CCFF00] font-mono font-bold text-[10.5px]">
                             💺 {j.seatProbabilityPercent}% SEAT CHANCE
                           </span>
                         </div>
 
-                        <div className="h-1.5 bg-[#1C1C1C] overflow-hidden flex">
+                        <div className="h-1.5 bg-[#181d2a] rounded-full overflow-hidden flex">
                           <div
                             style={{
                               width: `${j.occupancyPercent}%`,
@@ -511,16 +660,16 @@ export function JourneyPlannerTab({
                                 j.crowdLevel === 'LOW'
                                   ? '#CCFF00'
                                   : j.crowdLevel === 'MEDIUM'
-                                    ? '#FFB800'
+                                    ? '#f59e0b'
                                     : '#FFFFFF',
                             }}
-                            className="h-full transition-all duration-500"
+                            className="h-full rounded-full transition-all duration-500"
                           />
                         </div>
                       </div>
 
                       {/* Bottom Quick Row */}
-                      <div className="flex items-center justify-between pt-1 border-t border-[#1C1C1C] text-[11px] font-mono text-[#8E8E93]">
+                      <div className="flex items-center justify-between pt-1 border-t border-[#1c2232] text-[11px] font-mono text-slate-400">
                         <span>NEXT: <b className="text-white">{formatDurationMin(j.nextBusWaitSec)}</b></span>
                         <span>FARE: <b className="text-white">₹{j.totalFareInr}</b></span>
                         <button
@@ -530,9 +679,9 @@ export function JourneyPlannerTab({
                             onSelectJourney(j.id);
                             setExpandedId(isExpanded ? null : j.id);
                           }}
-                          className="text-[11px] font-black uppercase text-[#CCFF00] hover:underline flex items-center gap-0.5 cursor-pointer"
+                          className="text-[11px] font-mono font-bold uppercase text-[#CCFF00] hover:underline flex items-center gap-0.5 cursor-pointer"
                         >
-                          {isExpanded ? 'LESS' : 'STOPS'}
+                          {isExpanded ? 'HIDE STOPS' : 'SHOW STOPS'}
                           {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                         </button>
                       </div>
@@ -540,11 +689,11 @@ export function JourneyPlannerTab({
 
                     {/* Expandable Step-by-Step Breakdown */}
                     {isExpanded && (
-                      <div className="px-3.5 pb-3.5 pt-1 border-t border-[#222222] bg-[#0A0A0A] space-y-2 text-xs">
+                      <div className="px-3.5 pb-3.5 pt-1 border-t border-[#1c2232] bg-[#0b0e14] rounded-b-2xl space-y-2 text-xs">
                         {j.legs.map((leg, lIdx) => (
                           <div key={lIdx}>
                             {leg.type === 'WAIT' && (
-                              <div className="flex items-center justify-between text-[#8E8E93] py-1 font-mono text-[11px]">
+                              <div className="flex items-center justify-between text-slate-300 py-1 font-mono text-[11px]">
                                 <span className="inline-flex items-center gap-2">
                                   <Clock className="w-3.5 h-3.5 text-[#CCFF00]" />
                                   BOARD AT <b className="text-white uppercase">{leg.fromStopName}</b>
@@ -554,7 +703,7 @@ export function JourneyPlannerTab({
                             )}
 
                             {leg.type === 'TRANSFER_WALK' && (
-                              <div className="flex items-center justify-between px-3 py-1.5 bg-[#141414] text-[#FFB800] border border-[#333333] font-mono text-[11px]">
+                              <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-[#18150d] text-[#f59e0b] border border-[#f59e0b]/40 font-mono text-[11px]">
                                 <span className="inline-flex items-center gap-1.5 font-bold uppercase">
                                   <Footprints className="w-3.5 h-3.5" />
                                   CHANGE BUS AT {leg.fromStopName}
@@ -564,18 +713,18 @@ export function JourneyPlannerTab({
                             )}
 
                             {leg.type === 'BUS' && leg.segments && (
-                              <div className="bg-[#111111] border border-[#262626] p-2.5 space-y-2">
+                              <div className="bg-[#111520] border border-[#222a3d] rounded-xl p-2.5 space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <span className="inline-flex items-center gap-1.5 font-black uppercase text-white">
+                                  <span className="inline-flex items-center gap-1.5 font-bold uppercase text-white">
                                     <Bus className="w-3.5 h-3.5 text-[#CCFF00]" />
                                     ROUTE {leg.routeShortName} ({leg.stopCount} STOPS)
                                   </span>
                                   <span className="font-mono text-white text-[11px]">{formatDurationMin(leg.durationSec)}</span>
                                 </div>
 
-                                <div className="pl-2 space-y-1 border-l border-[#333333] ml-1.5">
+                                <div className="pl-2 space-y-1 border-l-2 border-[#2b3348] ml-1.5">
                                   {leg.segments.map((seg) => (
-                                    <div key={seg.segmentId} className="flex items-center justify-between text-[10.5px] pl-2 text-[#8E8E93] font-mono">
+                                    <div key={seg.segmentId} className="flex items-center justify-between text-[10.5px] pl-2 text-slate-400 font-mono">
                                       <span className="truncate uppercase">{seg.toStopName}</span>
                                       <span className="text-white ml-2">
                                         {seg.speedKmh.toFixed(0)} KM/H

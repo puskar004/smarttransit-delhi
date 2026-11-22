@@ -1620,9 +1620,9 @@ export const OPERATOR_META: Record<
   DTC_AC: {
     label: 'DTC AC Low-Floor',
     shortLabel: 'DTC AC',
-    color: '#C4272F',
-    softBg: '#FDECEC',
-    border: '#F3B7BA',
+    color: '#0284c7',
+    softBg: '#0f172a',
+    border: '#1e3a8a',
   },
   DTC_NON_AC: {
     label: 'DTC Non-AC',

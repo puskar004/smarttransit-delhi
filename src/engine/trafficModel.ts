@@ -29,13 +29,13 @@ export function classifyTrafficLevel(congestionIndex: number): TrafficLevel {
 export function trafficLevelColor(level: TrafficLevel): string {
   switch (level) {
     case 'FREE_FLOW':
-      return '#1A7A4A';
+      return '#10b981'; // vibrant emerald green
     case 'MODERATE':
-      return '#C88A04';
+      return '#f59e0b'; // warm yellow amber
     case 'HEAVY':
-      return '#D45815';
+      return '#d97706'; // deep amber
     case 'SEVERE':
-      return '#C4272F';
+      return '#b45309'; // dark golden amber (strictly NO RED)
   }
 }
 

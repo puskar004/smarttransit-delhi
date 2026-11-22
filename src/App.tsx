@@ -3,6 +3,7 @@ import {
   BookOpen,
   Bus,
   Compass,
+  HelpCircle,
   Pause,
   Play,
   Route as RouteIcon,
@@ -14,6 +15,7 @@ import { ApiGuideModal } from './components/ApiGuideModal';
 import { AuthScreen, type UserProfile } from './components/AuthScreen';
 import { BusSearchModal } from './components/BusSearchModal';
 import { DelhiMap } from './components/DelhiMap';
+import { HelpModal } from './components/HelpModal';
 import { HowItWorksView } from './components/HowItWorksView';
 import { JourneyPlannerTab } from './components/JourneyPlannerTab';
 import { LiveBusTrackerHud } from './components/LiveBusTrackerHud';
@@ -96,6 +98,7 @@ export function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isApiGuideOpen, setIsApiGuideOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const [lastIngestion, setLastIngestion] = useState<IngestionReport | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -349,6 +352,17 @@ export function App() {
             title="Search Buses"
           >
             <Search className="w-4 h-4" />
+          </button>
+
+          {/* Help & Guide Button */}
+          <button
+            type="button"
+            onClick={() => setIsHelpOpen(true)}
+            aria-label="Open Help & Transit Guide"
+            title="Help, Data Freshness & Feedback"
+            className="w-8 h-8 rounded-full bg-[#121620] hover:bg-[#1a2130] text-slate-300 hover:text-[#CCFF00] flex items-center justify-center border border-[#242c3e] transition-colors cursor-pointer"
+          >
+            <HelpCircle className="w-4 h-4" />
           </button>
 
           {/* User Profile Pill */}
@@ -636,6 +650,13 @@ export function App() {
         onRunSampleCsv={handleRunSampleCsv}
         onDownloadSampleCsv={handleDownloadSampleCsv}
         onExportGeoJson={handleExportGeoJson}
+      />
+
+      {/* Help, Feedback & Transit Guide Modal */}
+      <HelpModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+        onShowToast={showToast}
       />
     </div>
   );
