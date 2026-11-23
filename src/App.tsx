@@ -20,7 +20,6 @@ import { AuthScreen, type UserProfile } from './components/AuthScreen';
 import { BusSearchModal } from './components/BusSearchModal';
 import { DelhiMap } from './components/DelhiMap';
 import { HelpModal } from './components/HelpModal';
-import { HowItWorksView } from './components/HowItWorksView';
 import { JourneyPlannerTab } from './components/JourneyPlannerTab';
 import { LanguageSelectScreen } from './components/LanguageSelectScreen';
 import { LiveBusTrackerHud } from './components/LiveBusTrackerHud';
@@ -28,6 +27,7 @@ import { SegmentInspectorCard, StopPisCard } from './components/MapInspectors';
 import { QuickServicesBar } from './components/QuickServicesBar';
 import { Rotatable3DBusStage } from './components/Rotatable3DBusStage';
 import { TrafficModelTab } from './components/TrafficModelTab';
+import { TransportStackHackathonView } from './components/TransportStackHackathonView';
 import { UserProfileModal } from './components/UserProfileModal';
 import { DelhiTransitSimulator } from './engine/busSimulator';
 import {
@@ -318,6 +318,15 @@ export function App() {
               <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase bg-[#151923] text-slate-300 border border-[#252c3e]">
                 DELHI
               </span>
+              <button
+                type="button"
+                onClick={() => setPage('ABOUT')}
+                className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase bg-[#141b29] hover:bg-[#CCFF00] text-slate-300 hover:text-black border border-[#26354f] transition-all cursor-pointer shadow-sm"
+                title="View Transport Stack Hackathon 2026 Datasets & Solutions"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF00] animate-pulse" />
+                <span>HACKATHON 2026</span>
+              </button>
             </div>
           </button>
 
@@ -341,7 +350,7 @@ export function App() {
               { id: 'PLANNER', label: lang === 'hi' ? 'यात्रा योजना' : 'JOURNEY PLANNER', icon: RouteIcon },
               { id: 'ALL_BUSES', label: lang === 'hi' ? 'सभी बसें' : 'ALL BUSES', icon: Bus },
               { id: 'TRAFFIC', label: lang === 'hi' ? 'ट्रांजिट रडार' : 'TRANSIT RADAR', icon: Activity },
-              { id: 'ABOUT', label: lang === 'hi' ? 'डेटा स्टैक' : 'DATA STACK', icon: BookOpen },
+              { id: 'ABOUT', label: lang === 'hi' ? 'हैकथॉन स्टैक' : 'HACKATHON STACK', icon: BookOpen },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
@@ -466,16 +475,16 @@ export function App() {
 
       {/* 3. MAIN BODY CONTENT */}
       {page === 'ABOUT' ? (
-        <HowItWorksView
+        <TransportStackHackathonView
           metrics={validationMetrics}
           busCount={buses.length}
           lastIngestion={lastIngestion}
           onGoToPlanner={() => setPage('PLANNER')}
           onGoToTraffic={() => setPage('TRAFFIC')}
-          onIngestFileText={handleIngestFileText}
           onRunSampleCsv={handleRunSampleCsv}
           onDownloadSampleCsv={handleDownloadSampleCsv}
           onExportGeoJson={handleExportGeoJson}
+          lang={lang}
         />
       ) : (
         <div className="flex-1 min-h-0 relative flex overflow-hidden">
