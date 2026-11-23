@@ -3,8 +3,10 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   Clock,
   Compass,
+  MapPin,
   Navigation,
   Sparkles,
   Users,
@@ -19,6 +21,10 @@ interface LiveBusTrackerHudProps {
   onClose: () => void;
   onCenterOnBus: () => void;
   onSelectAnotherBus: () => void;
+  onMinimize?: () => void;
+  originStopId?: string;
+  destinationStopId?: string;
+  lang?: 'en' | 'hi';
 }
 
 export function LiveBusTrackerHud({
@@ -27,6 +33,10 @@ export function LiveBusTrackerHud({
   onClose,
   onCenterOnBus,
   onSelectAnotherBus,
+  onMinimize,
+  originStopId,
+  destinationStopId,
+  lang = 'en',
 }: LiveBusTrackerHudProps) {
   const meta = OPERATOR_META[bus.operator];
   const occ = Math.round(((bus.passengersEst ?? 30) / 60) * 100);
@@ -49,13 +59,20 @@ export function LiveBusTrackerHud({
   // Upcoming stop list (next 4 stops)
   const remainingStops = bus.stopSequence.slice(bus.currentStopIdx + 1, bus.currentStopIdx + 5);
 
+  // Commuter-relative Stop Calculation (Origin & Destination)
+  const userOriginIdx = originStopId ? bus.stopSequence.indexOf(originStopId) : -1;
+  const originStop = originStopId ? STOP_BY_ID[originStopId] : null;
+  const destStop = destinationStopId ? STOP_BY_ID[destinationStopId] : null;
+  const stopsAwayFromOrigin = userOriginIdx !== -1 ? userOriginIdx - bus.currentStopIdx : null;
+  const isAtOriginStop = stopsAwayFromOrigin === 0;
+
   return (
-    <div className="w-[360px] sm:w-[410px] bg-[#0E0E0E] border-2 border-[#CCFF00] p-4 sm:p-5 shadow-[0_16px_40px_rgba(0,0,0,0.9)] text-white space-y-3.5 animate-in fade-in slide-in-from-bottom-4 duration-200 font-sans select-none">
-      {/* Top Header: Badge, Bus Number, Status Pill & Close */}
+    <div className="w-[360px] sm:w-[420px] bg-[#0E0E0E]/95 backdrop-blur-md border-2 border-[#CCFF00] p-4 sm:p-5 shadow-[0_16px_40px_rgba(0,0,0,0.95)] text-white space-y-3 animate-in fade-in slide-in-from-bottom-4 duration-200 font-sans select-none rounded-xl">
+      {/* Top Header: Badge, Bus Number, Status Pill, Minimize & Close Buttons */}
       <div className="flex items-start justify-between gap-3 border-b border-[#222222] pb-3">
         <div className="flex items-center gap-3">
           {/* Operator colored icon box */}
-          <div className="w-11 h-11 bg-[#CCFF00] text-black font-black text-base flex items-center justify-center uppercase">
+          <div className="w-11 h-11 bg-[#CCFF00] text-black font-black text-base flex items-center justify-center uppercase rounded-lg shadow-[0_0_15px_rgba(204,255,0,0.35)]">
             {bus.routeShortName}
           </div>
 
@@ -64,31 +81,85 @@ export function LiveBusTrackerHud({
               <span className="font-mono font-bold text-sm text-white">
                 {bus.vehicleId}
               </span>
-              <span className="text-[9.5px] font-mono font-black px-2 py-0.5 uppercase bg-[#1A1A1A] text-[#CCFF00] border border-[#333333]">
+              <span className="text-[9.5px] font-mono font-black px-2 py-0.5 uppercase bg-[#1A1A1A] text-[#CCFF00] border border-[#333333] rounded">
                 {meta.label}
               </span>
             </div>
             <div className="text-[11px] font-mono text-[#8E8E93] flex items-center gap-1.5 mt-0.5">
               <span>ROUTE {bus.routeShortName}</span>
               <span>•</span>
-              <span className="text-[#CCFF00] font-bold">AVLS GPS ACTIVE</span>
+              <span className="text-[#CCFF00] font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF00] animate-pulse" />
+                AVLS GPS LIVE
+              </span>
             </div>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-7 h-7 bg-[#141414] hover:bg-[#CCFF00] hover:text-black border border-[#262626] text-[#8E8E93] flex items-center justify-center transition-all cursor-pointer"
-          title="Exit live tracking"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Action Controls: MINIMIZE (on/off toggle) and CLOSE */}
+        <div className="flex items-center gap-1.5">
+          {onMinimize && (
+            <button
+              type="button"
+              onClick={onMinimize}
+              className="px-2.5 py-1.5 bg-[#181d28] hover:bg-[#CCFF00] hover:text-black border border-[#2b354d] text-slate-300 hover:font-bold text-[10px] font-mono uppercase transition-all cursor-pointer rounded flex items-center gap-1 shadow-sm"
+              title={lang === 'hi' ? 'विवरण छुपाएं (मैप देखें)' : 'Minimize HUD to view map (keeps tracking)'}
+            >
+              <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>{lang === 'hi' ? 'छुपाएं' : 'MINIMIZE'}</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-7 h-7 bg-[#141414] hover:bg-[#CCFF00] hover:text-black border border-[#262626] text-[#8E8E93] flex items-center justify-center transition-all cursor-pointer rounded"
+            title={lang === 'hi' ? 'लाइव ट्रैकिंग बंद करें' : 'Stop live tracking'}
+          >
+            <X className="w-4 h-4 stroke-[2.5]" />
+          </button>
+        </div>
       </div>
+
+      {/* Commuter Journey Link: Distance & ETA to user's boarding stop */}
+      {originStop && userOriginIdx !== -1 && (
+        <div className="bg-[#101923] border border-[#1b3a32] rounded-lg p-2.5 flex items-center justify-between font-mono text-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded bg-[#10B981] text-black font-black flex items-center justify-center text-xs shrink-0">
+              <MapPin className="w-3.5 h-3.5 stroke-[3]" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[9px] uppercase text-[#10B981] font-bold">
+                {lang === 'hi' ? 'आपका बोर्डिंग स्टॉप' : 'YOUR PICKUP LOCATION'}
+              </div>
+              <div className="text-xs font-bold text-white truncate uppercase">
+                {originStop.name}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-right shrink-0">
+            <div className="text-xs font-mono font-black text-[#CCFF00]">
+              {stopsAwayFromOrigin! > 0
+                ? `${stopsAwayFromOrigin} ${lang === 'hi' ? 'स्टॉप दूर' : 'STOPS AWAY'}`
+                : isAtOriginStop
+                ? (lang === 'hi' ? 'पहुंच गई • बोर्ड करें!' : 'ARRIVED • BOARD NOW!')
+                : destStop
+                ? `${lang === 'hi' ? 'गंतव्य' : 'DEST'}: ${destStop.name}`
+                : (lang === 'hi' ? 'स्टॉप से आगे है' : 'PASSED YOUR STOP')}
+            </div>
+            {stopsAwayFromOrigin! > 0 && (
+              <div className="text-[9.5px] text-slate-300 font-bold">
+                ETA ~{Math.max(1, Math.round(bus.etaNextStopSec / 60) + (stopsAwayFromOrigin! - 1) * 3)} MIN
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* On-Time / Delay Banner (Punctuality Status — NO RED!) */}
       <div
-        className={`px-3 py-2 border flex items-center justify-between text-xs font-mono font-bold uppercase ${
+        className={`px-3 py-1.5 border flex items-center justify-between text-xs font-mono font-bold uppercase rounded ${
           isOnTime
             ? 'bg-[#141414] border-[#CCFF00] text-[#CCFF00]'
             : isDelayed
@@ -218,7 +289,7 @@ export function LiveBusTrackerHud({
         <button
           type="button"
           onClick={onCenterOnBus}
-          className="flex-1 py-2 bg-[#141414] hover:bg-[#1A1A1A] border border-[#262626] hover:border-[#CCFF00] text-white text-xs font-mono font-bold uppercase inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+          className="flex-1 py-2 bg-[#141414] hover:bg-[#1A1A1A] border border-[#262626] hover:border-[#CCFF00] text-white text-xs font-mono font-bold uppercase inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer rounded"
         >
           <Compass className="w-3.5 h-3.5 text-[#CCFF00]" />
           <span>Center ↗</span>
@@ -227,12 +298,25 @@ export function LiveBusTrackerHud({
         <button
           type="button"
           onClick={onSelectAnotherBus}
-          className="flex-1 py-2 bg-[#CCFF00] hover:bg-[#B8E600] text-black text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+          className="flex-1 py-2 bg-[#CCFF00] hover:bg-[#B8E600] text-black text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer rounded shadow-sm"
         >
           <span>Search Buses</span>
           <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
         </button>
       </div>
+
+      {/* Direct Quick Toggle: Hide / Minimize HUD to see map clearly */}
+      {onMinimize && (
+        <button
+          type="button"
+          onClick={onMinimize}
+          className="w-full py-1.5 bg-[#141822] hover:bg-[#1f2637] border border-[#263045] hover:border-[#CCFF00] text-slate-300 hover:text-[#CCFF00] text-[11px] font-mono font-bold uppercase transition-all cursor-pointer rounded flex items-center justify-center gap-1.5 shadow-sm active:scale-98"
+          title="Minimize details card so you can inspect the whole map without losing the bus"
+        >
+          <ChevronDown className="w-3.5 h-3.5" />
+          <span>{lang === 'hi' ? 'मैप देखने के लिए विवरण छुपाएं (ट्रैकिंग जारी)' : 'MINIMIZE HUD TO VIEW MAP (KEEP TRACKING)'}</span>
+        </button>
+      )}
     </div>
   );
 }

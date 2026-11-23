@@ -11,6 +11,7 @@ import {
   Play,
   Route as RouteIcon,
   Search,
+  X,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AllBusesView } from './components/AllBusesView';
@@ -106,6 +107,7 @@ export function App() {
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [hasChosenLanguage, setHasChosenLanguage] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+  const [isHudMinimized, setIsHudMinimized] = useState<boolean>(false);
 
   const [lastIngestion, setLastIngestion] = useState<IngestionReport | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -260,6 +262,7 @@ export function App() {
   const handleTrackBus = (vehicleId: string) => {
     setTrackedBusId(vehicleId);
     setShowMapInAllBuses(true);
+    setIsHudMinimized(false);
     const bus = buses.find((b) => b.vehicleId === vehicleId);
     if (bus) {
       showToast(`🎯 Live tracking Bus ${bus.routeShortName} (${bus.vehicleId}) on Delhi Map!`);
@@ -651,19 +654,59 @@ export function App() {
                   </span>
                 </div>
 
-                {/* LIVE BUS TRACKING FLOATING HUD */}
+                {/* LIVE BUS TRACKING FLOATING HUD (With on/off minimize toggle) */}
                 {trackedBus && (
                   <div className={`absolute top-16 ${isSidebarOpen ? 'left-4 lg:left-[470px]' : 'left-4'} z-[520] transition-all duration-300`}>
-                    <LiveBusTrackerHud
-                      bus={trackedBus}
-                      trafficStates={trafficStates}
-                      onClose={() => setTrackedBusId(null)}
-                      onCenterOnBus={() => {
-                        setTrackedBusId(null);
-                        setTimeout(() => setTrackedBusId(trackedBus.vehicleId), 20);
-                      }}
-                      onSelectAnotherBus={() => setIsSearchOpen(true)}
-                    />
+                    {isHudMinimized ? (
+                      /* Compact Minimized Tracking Bar (Commuter can reopen anytime!) */
+                      <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-[#0b0e14]/95 backdrop-blur-md border-2 border-[#CCFF00] shadow-[0_12px_36px_rgba(0,0,0,0.95)] font-mono text-white select-none animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="w-8 h-8 rounded-lg bg-[#CCFF00] text-black font-black flex items-center justify-center text-sm shadow-[0_0_12px_rgba(204,255,0,0.5)]">
+                          {trackedBus.routeShortName}
+                        </div>
+                        <div className="flex flex-col text-left">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-xs text-white">BUS {trackedBus.routeShortName}</span>
+                            <span className="text-[10px] text-slate-400">({trackedBus.vehicleId})</span>
+                            <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse" />
+                          </div>
+                          <div className="text-[10.5px] text-[#CCFF00] font-bold">
+                            {trackedBus.isDwelling ? 'Boarding at stop' : `${Math.round(trackedBus.speedKmh)} km/h`} • {trackedBus.nextStopName}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsHudMinimized(false)}
+                          className="ml-2 px-3 py-1.5 rounded-lg bg-[#CCFF00] hover:bg-white text-black font-black text-[10.5px] uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-md hover:scale-105 active:scale-95"
+                          title={lang === 'hi' ? 'पूरा विवरण खोलें' : 'Expand full bus telemetry details'}
+                        >
+                          <span>{lang === 'hi' ? 'विवरण खोलें ▲' : 'EXPAND DETAILS ▲'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTrackedBusId(null)}
+                          className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                          title={lang === 'hi' ? 'ट्रैकिंग बंद करें' : 'Stop tracking bus'}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      /* Full Telemetry HUD with on/off minimize option */
+                      <LiveBusTrackerHud
+                        bus={trackedBus}
+                        trafficStates={trafficStates}
+                        originStopId={originStopId}
+                        destinationStopId={destinationStopId}
+                        onMinimize={() => setIsHudMinimized(true)}
+                        onClose={() => setTrackedBusId(null)}
+                        onCenterOnBus={() => {
+                          setTrackedBusId(null);
+                          setTimeout(() => setTrackedBusId(trackedBus.vehicleId), 20);
+                        }}
+                        onSelectAnotherBus={() => setIsSearchOpen(true)}
+                        lang={lang}
+                      />
+                    )}
                   </div>
                 )}
 

@@ -79,6 +79,8 @@ export function DelhiMap({
 
   const lastFittedEndpointsRef = useRef<string>('');
   const lastTrackedBusCenterRef = useRef<string>('');
+  const trackedMarkerRef = useRef<L.Marker | null>(null);
+  const trackedBusIdRef = useRef<string | null>(null);
 
   // 1. Initialize Leaflet map with Dark Matter tiles once
   useEffect(() => {
@@ -233,12 +235,12 @@ export function DelhiMap({
           if (!coords) continue;
           allBoundsCoords.push(...coords);
 
-          // Deep neon outer glow (Cyan AI theme)
+          // Deep neon outer glow (Volt transit theme)
           L.polyline(coords, {
             pane: 'routePane',
-            color: '#00E5FF',
+            color: '#CCFF00',
             weight: 12,
-            opacity: 0.3,
+            opacity: 0.28,
             lineCap: 'round',
             lineJoin: 'round',
             interactive: false,
@@ -247,7 +249,7 @@ export function DelhiMap({
           // High-contrast primary route stroke
           L.polyline(coords, {
             pane: 'routePane',
-            color: '#00E5FF',
+            color: '#CCFF00',
             weight: 5.5,
             opacity: 0.95,
             lineCap: 'round',
@@ -255,34 +257,118 @@ export function DelhiMap({
           }).addTo(routeGroup);
         }
 
-        // Draw stops along tracked route
+        // Draw stops along tracked route (Highlighting commuter origin and destination!)
         routeStops.forEach((sId) => {
           const stop = STOP_BY_ID[sId];
           if (!stop) return;
           const isNext = sId === trackedBus.nextStopId;
+          const isOrigin = sId === originStopId;
+          const isDest = sId === destinationStopId;
 
-          L.circleMarker([stop.lat, stop.lng], {
-            pane: 'stopPane',
-            radius: isNext ? 8 : 5,
-            fillColor: isNext ? '#00E5FF' : '#1E222D',
-            color: isNext ? '#FFFFFF' : '#38BDF8',
-            weight: isNext ? 3 : 2,
-            fillOpacity: 1,
-          })
-            .bindTooltip(
-              `<b>${stop.name}</b>${isNext ? '<br/><span style="color:#00E5FF;font-weight:bold">APPROACHING NEXT STOP</span>' : ''}`,
-              { direction: 'top', offset: [0, -6], className: 'pravaah-dark-tooltip' }
-            )
-            .addTo(stopGroup);
+          if (isOrigin) {
+            // User's Pickup / Boarding Location!
+            L.circleMarker([stop.lat, stop.lng], {
+              pane: 'stopPane',
+              radius: 9,
+              fillColor: '#10B981',
+              color: '#FFFFFF',
+              weight: 3,
+              fillOpacity: 1,
+            }).addTo(stopGroup);
+
+            L.marker([stop.lat, stop.lng], {
+              pane: 'busPane',
+              interactive: false,
+              icon: L.divIcon({
+                className: '',
+                html: `<div style="transform:translate(-50%,-145%);display:inline-flex;align-items:center;gap:6px;background:#10B981;color:#000;font-size:11px;font-weight:900;padding:5px 10px;border-radius:8px;white-space:nowrap;border:2px solid #fff;box-shadow:0 0 20px rgba(16,185,129,0.9);font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:0.04em">
+                  <span>📍 YOUR PICKUP STOP · ${stop.name}</span>
+                </div>`,
+                iconSize: [0, 0],
+              }),
+            }).addTo(routeGroup);
+          } else if (isDest) {
+            // User's Destination / Drop-off Location!
+            L.circleMarker([stop.lat, stop.lng], {
+              pane: 'stopPane',
+              radius: 9,
+              fillColor: '#CCFF00',
+              color: '#000000',
+              weight: 3,
+              fillOpacity: 1,
+            }).addTo(stopGroup);
+
+            L.marker([stop.lat, stop.lng], {
+              pane: 'busPane',
+              interactive: false,
+              icon: L.divIcon({
+                className: '',
+                html: `<div style="transform:translate(-50%,-145%);display:inline-flex;align-items:center;gap:6px;background:#CCFF00;color:#000;font-size:11px;font-weight:900;padding:5px 10px;border-radius:8px;white-space:nowrap;border:2px solid #000;box-shadow:0 0 20px rgba(204,255,0,0.9);font-family:'Plus Jakarta Sans',sans-serif;letter-spacing:0.04em">
+                  <span>🏁 YOUR DESTINATION · ${stop.name}</span>
+                </div>`,
+                iconSize: [0, 0],
+              }),
+            }).addTo(routeGroup);
+          } else {
+            L.circleMarker([stop.lat, stop.lng], {
+              pane: 'stopPane',
+              radius: isNext ? 8 : 5,
+              fillColor: isNext ? '#CCFF00' : '#1E222D',
+              color: isNext ? '#FFFFFF' : '#38BDF8',
+              weight: isNext ? 3 : 2,
+              fillOpacity: 1,
+            })
+              .bindTooltip(
+                `<b>${stop.name}</b>${isNext ? '<br/><span style="color:#CCFF00;font-weight:bold">APPROACHING NEXT STOP</span>' : ''}`,
+                { direction: 'top', offset: [0, -6], className: 'pravaah-dark-tooltip' }
+              )
+              .addTo(stopGroup);
+          }
         });
 
-        // Center map on tracked bus initially
+        // Also render Origin and Dest if they exist outside this specific bus route
+        const originObj = STOP_BY_ID[originStopId];
+        const destObj = STOP_BY_ID[destinationStopId];
+        if (originObj && !routeStops.includes(originStopId)) {
+          L.circleMarker([originObj.lat, originObj.lng], {
+            pane: 'stopPane',
+            radius: 8,
+            fillColor: '#10B981',
+            color: '#FFFFFF',
+            weight: 3,
+            fillOpacity: 1,
+          }).addTo(stopGroup);
+        }
+        if (destObj && !routeStops.includes(destinationStopId)) {
+          L.circleMarker([destObj.lat, destObj.lng], {
+            pane: 'stopPane',
+            radius: 8,
+            fillColor: '#CCFF00',
+            color: '#000000',
+            weight: 3,
+            fillOpacity: 1,
+          }).addTo(stopGroup);
+        }
+
+        // Fit bounds to show BOTH commuter's pickup stop and approaching bus!
         if (mapRef.current && lastTrackedBusCenterRef.current !== trackedBus.vehicleId) {
           lastTrackedBusCenterRef.current = trackedBus.vehicleId;
-          mapRef.current.flyTo([trackedBus.lat, trackedBus.lng], 14, {
-            animate: true,
-            duration: 0.8,
-          });
+          if (originObj && routeStops.includes(originStopId)) {
+            const bounds = L.latLngBounds([
+              [trackedBus.lat, trackedBus.lng],
+              [originObj.lat, originObj.lng],
+            ]).pad(0.35);
+            mapRef.current.fitBounds(bounds, {
+              maxZoom: 14.5,
+              animate: true,
+              duration: 0.8,
+            });
+          } else {
+            mapRef.current.flyTo([trackedBus.lat, trackedBus.lng], 14, {
+              animate: true,
+              duration: 0.8,
+            });
+          }
         }
         return;
       }
@@ -463,7 +549,6 @@ export function DelhiMap({
   useEffect(() => {
     const busGroup = busLayerRef.current;
     if (!busGroup) return;
-    busGroup.clearLayers();
 
     // When a bus is being live tracked
     if (trackedBusId) {
@@ -471,30 +556,60 @@ export function DelhiMap({
       if (trackedBus) {
         const occ = Math.round(((trackedBus.passengersEst ?? 30) / 60) * 100);
         const crowdColor = occ < 45 ? '#CCFF00' : occ < 75 ? '#FFB800' : '#FFFFFF';
+        const bearing = trackedBus.bearingDeg ?? 0;
 
-        L.marker([trackedBus.lat, trackedBus.lng], {
-          pane: 'busPane',
-          icon: L.divIcon({
-            className: 'bus-smooth-marker',
-            html: `<div style="transform:translate(-50%,-50%);position:relative;display:inline-flex;align-items:center;gap:6px;background:#0F121C;color:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:900;padding:6px 12px;border-radius:12px;border:2.5px solid #00E5FF;box-shadow:0 0 28px rgba(0,229,255,0.9);white-space:nowrap;z-index:999">
-              <span class="animate-ping" style="position:absolute;inset:-6px;border-radius:14px;border:2px solid #00E5FF;opacity:0.75;pointer-events:none"></span>
-              <span style="color:#00E5FF;font-size:14px">🎯</span>
-              <span>BUS ${trackedBus.routeShortName}</span>
-              <span style="color:#94A3B8;font-size:11px">(${trackedBus.vehicleId})</span>
-              <span style="width:8px;height:8px;border-radius:50%;background:${crowdColor}"></span>
-              <span style="color:${crowdColor};font-size:11px">${occ}%</span>
-            </div>`,
-            iconSize: [0, 0],
-          }),
-        })
-          .bindTooltip(
-            `<b>LIVE TRACKING: Bus ${trackedBus.routeShortName}</b> (${trackedBus.vehicleId})<br/>Occupancy: <span style="color:${crowdColor}"><b>${occ}% full</b></span><br/>Speed: ${trackedBus.speedKmh.toFixed(0)} km/h · Next: ${trackedBus.nextStopName}`,
-            { direction: 'top', offset: [0, -12], className: 'pravaah-dark-tooltip' }
-          )
-          .addTo(busGroup);
+        const iconHtml = `<div class="bus-smooth-marker" style="transform:translate(-50%,-50%);position:relative;display:inline-flex;align-items:center;gap:7px;background:#0b0e14;color:#fff;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:900;padding:6px 12px;border-radius:12px;border:2.5px solid #CCFF00;box-shadow:0 0 28px rgba(204,255,0,0.85);white-space:nowrap;z-index:999">
+          <span class="animate-ping" style="position:absolute;inset:-6px;border-radius:14px;border:2px solid #CCFF00;opacity:0.75;pointer-events:none"></span>
+          <div style="width:22px;height:22px;border-radius:6px;background:#CCFF00;color:#000;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;transform:rotate(${bearing}deg);transition:transform 0.4s ease;box-shadow:0 0 10px rgba(204,255,0,0.6)">
+            ▲
+          </div>
+          <span style="color:#CCFF00">BUS ${trackedBus.routeShortName}</span>
+          <span style="color:#94A3B8;font-size:11px">(${trackedBus.vehicleId})</span>
+          <span style="color:#FFFFFF;font-size:11px">${Math.round(trackedBus.speedKmh)} km/h</span>
+          <span style="width:7px;height:7px;border-radius:50%;background:${crowdColor}"></span>
+          <span style="color:${crowdColor};font-size:11px">${occ}%</span>
+        </div>`;
+
+        if (trackedBusIdRef.current === trackedBusId && trackedMarkerRef.current) {
+          // SMOOTH REAL-TIME GLIDE: Update coordinates on persistent marker
+          trackedMarkerRef.current.setLatLng([trackedBus.lat, trackedBus.lng]);
+          trackedMarkerRef.current.setIcon(
+            L.divIcon({
+              className: 'bus-smooth-marker',
+              html: iconHtml,
+              iconSize: [0, 0],
+            })
+          );
+        } else {
+          // First time tracking this bus: create marker
+          busGroup.clearLayers();
+          const marker = L.marker([trackedBus.lat, trackedBus.lng], {
+            pane: 'busPane',
+            icon: L.divIcon({
+              className: 'bus-smooth-marker',
+              html: iconHtml,
+              iconSize: [0, 0],
+            }),
+          })
+            .bindTooltip(
+              `<b>LIVE TRACKING: Bus ${trackedBus.routeShortName}</b> (${trackedBus.vehicleId})<br/>Occupancy: <span style="color:${crowdColor}"><b>${occ}% full</b></span><br/>Speed: ${trackedBus.speedKmh.toFixed(0)} km/h · Next: ${trackedBus.nextStopName}`,
+              { direction: 'top', offset: [0, -12], className: 'pravaah-dark-tooltip' }
+            )
+            .addTo(busGroup);
+
+          trackedMarkerRef.current = marker;
+          trackedBusIdRef.current = trackedBusId;
+        }
       }
       return;
     }
+
+    // Reset tracked marker ref if not tracking
+    if (trackedMarkerRef.current) {
+      trackedMarkerRef.current = null;
+      trackedBusIdRef.current = null;
+    }
+    busGroup.clearLayers();
 
     if (mode === 'PLANNER' && activeJourney) {
       const activeRouteIds = new Set(
