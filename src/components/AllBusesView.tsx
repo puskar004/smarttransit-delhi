@@ -68,33 +68,44 @@ export function AllBusesView({
   }, [buses, searchQuery, activeFilter]);
 
   return (
-    <div className="h-full flex flex-col bg-[#0b0e14] text-white overflow-hidden font-sans select-none">
-      {/* Header Area */}
-      <div className="p-4 sm:p-5 border-b border-[#1c2232] bg-[#0d1017] space-y-3.5 shrink-0">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-none">
-              {lang === 'hi' ? 'सभी बसें' : 'ALL THE BUSES'}
-            </h1>
-            <p className="text-[10px] font-mono tracking-widest text-slate-400 uppercase mt-1">
-              {lang === 'hi' ? 'दिल्ली सक्रिय फ्लीट रोटेशन' : 'THE FULL FLEET ROTATION'}
-            </p>
-          </div>
+    <div className="h-full flex flex-col bg-[#0b0e14] text-white font-sans select-none overflow-y-auto">
+      {/* 1. Sleek Compact Sticky Header Bar */}
+      <div className="sticky top-0 z-30 px-3.5 sm:px-5 py-2.5 bg-[#0c0e14]/95 backdrop-blur-md border-b border-[#1c2232] flex items-center justify-between shrink-0 shadow-sm">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse" />
+          <h2 className="text-sm font-black uppercase tracking-tight text-white leading-none">
+            {lang === 'hi' ? 'सभी बसें' : 'ALL THE BUSES'}
+          </h2>
+          <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded bg-[#CCFF00]/15 text-[#CCFF00] border border-[#CCFF00]/30">
+            {buses.length} LIVE
+          </span>
+        </div>
 
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Collapse bus list inside"
-              title="Slide / Collapse list inside"
-              className="px-2.5 py-1.5 rounded-xl bg-[#151923] hover:bg-[#CCFF00] hover:text-black border border-[#273045] text-slate-300 hover:border-black flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
-            >
-              <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-              <span className="text-[10px] font-mono font-bold uppercase">
-                {lang === 'hi' ? 'अंदर करें' : 'COLLAPSE'}
-              </span>
-            </button>
-          )}
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Collapse bus list inside"
+            title="Slide / Collapse list inside"
+            className="px-2.5 py-1 rounded-lg bg-[#151923] hover:bg-[#CCFF00] hover:text-black border border-[#273045] text-slate-300 hover:border-black flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95"
+          >
+            <ChevronLeft className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span className="text-[10px] font-mono font-bold uppercase">
+              {lang === 'hi' ? 'अंदर करें' : 'COLLAPSE'}
+            </span>
+          </button>
+        )}
+      </div>
+
+      {/* 2. Main Header Details (Big Title, Subtitle, Filter Pills, Search Bar - scrolls naturally!) */}
+      <div className="p-4 sm:p-5 border-b border-[#1c2232] bg-[#0d1017] space-y-3.5">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-none">
+            {lang === 'hi' ? 'सभी बसें' : 'ALL THE BUSES'}
+          </h1>
+          <p className="text-[10px] font-mono tracking-widest text-slate-400 uppercase mt-1">
+            {lang === 'hi' ? 'दिल्ली सक्रिय फ्लीट रोटेशन' : 'THE FULL FLEET ROTATION'}
+          </p>
         </div>
 
         {/* Filter Pills — Exact Screenshot: All (72), On Time (18), Delayed (43) */}
@@ -144,8 +155,8 @@ export function AllBusesView({
         </div>
       </div>
 
-      {/* Bus Cards Stream */}
-      <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3 no-scrollbar">
+      {/* 3. Bus Cards Stream (Flows naturally as part of the full drawer!) */}
+      <div className="p-3.5 sm:p-4 space-y-3 pb-12">
         {filteredBuses.length === 0 ? (
           <div className="py-16 text-center text-slate-500 space-y-2">
             <p className="text-xs font-mono uppercase tracking-wider text-slate-400">No buses matching filter</p>
