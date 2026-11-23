@@ -9,6 +9,7 @@ import {
   MapPin,
   Navigation,
   Sparkles,
+  Ticket,
   Users,
   X,
 } from 'lucide-react';
@@ -22,6 +23,14 @@ interface LiveBusTrackerHudProps {
   onCenterOnBus: () => void;
   onSelectAnotherBus: () => void;
   onMinimize?: () => void;
+  onOpenTicket?: (config?: {
+    route?: string;
+    vehicleId?: string;
+    from?: string;
+    to?: string;
+    fare?: number;
+    type?: 'single' | 'pink' | 'daily' | 'pass';
+  }) => void;
   originStopId?: string;
   destinationStopId?: string;
   lang?: 'en' | 'hi';
@@ -34,6 +43,7 @@ export function LiveBusTrackerHud({
   onCenterOnBus,
   onSelectAnotherBus,
   onMinimize,
+  onOpenTicket,
   originStopId,
   destinationStopId,
   lang = 'en',
@@ -304,6 +314,27 @@ export function LiveBusTrackerHud({
           <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
         </button>
       </div>
+
+      {/* E-Ticket Booking Button for Tracked Bus */}
+      {onOpenTicket && (
+        <button
+          type="button"
+          onClick={() =>
+            onOpenTicket({
+              route: bus.routeShortName,
+              vehicleId: bus.vehicleId,
+              from: originStop?.name,
+              to: destStop?.name,
+              fare: 15,
+              type: 'single',
+            })
+          }
+          className="w-full py-2 bg-[#121722] hover:bg-[#1a2233] border border-[#243048] hover:border-[#CCFF00] text-[#CCFF00] text-xs font-mono font-bold uppercase inline-flex items-center justify-center gap-2 transition-all cursor-pointer rounded shadow-xs active:scale-[0.98]"
+        >
+          <Ticket className="w-3.5 h-3.5 stroke-[2.2]" />
+          <span>{lang === 'hi' ? 'इस बस के लिए ई-टिकट / पास लें' : 'GET E-TICKET / PASS FOR THIS BUS'}</span>
+        </button>
+      )}
 
       {/* Direct Quick Toggle: Hide / Minimize HUD to see map clearly */}
       {onMinimize && (

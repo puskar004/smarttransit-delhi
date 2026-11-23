@@ -11,6 +11,7 @@ import {
   Play,
   Route as RouteIcon,
   Search,
+  Ticket,
   X,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -19,6 +20,7 @@ import { ApiGuideModal } from './components/ApiGuideModal';
 import { AuthScreen, type UserProfile } from './components/AuthScreen';
 import { BusSearchModal } from './components/BusSearchModal';
 import { DelhiMap } from './components/DelhiMap';
+import { DigitalTicketModal, type TicketConfig } from './components/DigitalTicketModal';
 import { HelpModal } from './components/HelpModal';
 import { JourneyPlannerTab } from './components/JourneyPlannerTab';
 import { LanguageSelectScreen } from './components/LanguageSelectScreen';
@@ -29,6 +31,7 @@ import { Rotatable3DBusStage } from './components/Rotatable3DBusStage';
 import { TrafficModelTab } from './components/TrafficModelTab';
 import { TransportStackHackathonView } from './components/TransportStackHackathonView';
 import { UserProfileModal } from './components/UserProfileModal';
+import { STOP_BY_ID } from './data/delhiNetwork';
 import { DelhiTransitSimulator } from './engine/busSimulator';
 import {
   exportTrafficGeoJson,
@@ -160,6 +163,26 @@ export function App() {
     if (!trackedBusId) return null;
     return buses.find((b) => b.vehicleId === trackedBusId) ?? null;
   }, [buses, trackedBusId]);
+
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [ticketModalConfig, setTicketModalConfig] = useState<TicketConfig | null>(null);
+
+  const handleOpenTicketModal = useCallback(
+    (cfg?: TicketConfig) => {
+      setTicketModalConfig(
+        cfg ?? {
+          route: activeJourney?.routeBadges[0]?.shortName ?? '534',
+          from: STOP_BY_ID[originStopId]?.name ?? 'IIIT Delhi (Okhla Ph-III)',
+          to: STOP_BY_ID[destinationStopId]?.name ?? 'AIIMS Ring Road',
+          fare: activeJourney?.totalFareInr ?? 15,
+          vehicleId: trackedBus?.vehicleId ?? 'DL51EV-1557',
+          type: 'single',
+        }
+      );
+      setIsTicketModalOpen(true);
+    },
+    [activeJourney, originStopId, destinationStopId, trackedBus]
+  );
 
   const avgNetworkSpeed = useMemo(() => {
     const all = Object.values(trafficStates);
@@ -419,6 +442,20 @@ export function App() {
             <HelpCircle className="w-4 h-4" />
           </button>
 
+          {/* Prominent Ticket / E-Pass Capsule Button */}
+          <button
+            type="button"
+            onClick={() => handleOpenTicketModal()}
+            className="flex items-center gap-1.5 bg-[#141b2a] hover:bg-[#1f283c] border border-[#2e3b56] hover:border-[#CCFF00] px-3 py-1 rounded-full text-xs transition-all cursor-pointer group text-[#CCFF00] shadow-sm active:scale-95"
+            title={lang === 'hi' ? 'डीटीसी ई-टिकट एवं पास खोलें' : 'Open DTC Digital Bus Ticket & Pass'}
+          >
+            <Ticket className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span className="font-mono font-bold tracking-wider text-xs text-white group-hover:text-[#CCFF00]">
+              {lang === 'hi' ? 'टिकट' : 'TICKET'}
+            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#CCFF00] animate-pulse hidden sm:inline-block" />
+          </button>
+
           {/* User Profile Pill */}
           <button
             type="button"
@@ -441,9 +478,10 @@ export function App() {
         </div>
       </header>
 
-      {/* 2. SUBHEADER CAPSULE BAR (5 Pills matching Screenshot) */}
+      {/* 2. SUBHEADER CAPSULE BAR (6 Pills matching Screenshot) */}
       <QuickServicesBar
         activeTab={page}
+        onOpenTicket={() => handleOpenTicketModal()}
         onOpenAllBuses={() => {
           setPage('ALL_BUSES');
           setShowMapInAllBuses(false);
@@ -471,6 +509,7 @@ export function App() {
           handleToggleIncident('inc_ashram');
           setIsSidebarOpen(true);
         }}
+        lang={lang}
       />
 
       {/* 3. MAIN BODY CONTENT */}
@@ -532,6 +571,7 @@ export function App() {
                 onSelectJourney={setSelectedJourneyId}
                 onOpenTrafficMode={() => setPage('TRAFFIC')}
                 onLiveTrackBus={handleTrackBus}
+                onOpenTicket={handleOpenTicketModal}
                 onClose={() => setIsSidebarOpen(false)}
                 lang={lang}
               />
@@ -540,6 +580,7 @@ export function App() {
                 buses={buses}
                 onLiveTrackBus={handleTrackBus}
                 onGoToPlanner={() => setPage('PLANNER')}
+                onOpenTicket={handleOpenTicketModal}
                 onClose={() => setIsSidebarOpen(false)}
                 lang={lang}
               />
@@ -713,6 +754,7 @@ export function App() {
                           setTimeout(() => setTrackedBusId(trackedBus.vehicleId), 20);
                         }}
                         onSelectAnotherBus={() => setIsSearchOpen(true)}
+                        onOpenTicket={handleOpenTicketModal}
                         lang={lang}
                       />
                     )}
@@ -793,6 +835,7 @@ export function App() {
         onClose={() => setIsProfileModalOpen(false)}
         currentUser={currentUser}
         onSignOut={handleUserLogout}
+        onOpenFullTicket={() => handleOpenTicketModal()}
         onSwitchUser={(user) => {
           setCurrentUser(user);
           try {
@@ -800,6 +843,15 @@ export function App() {
           } catch {}
           showToast(`Switched active profile to ${user.name}`);
         }}
+      />
+
+      {/* DTC E-Ticket & Digital Transit Pass Modal */}
+      <DigitalTicketModal
+        isOpen={isTicketModalOpen}
+        onClose={() => setIsTicketModalOpen(false)}
+        currentUser={currentUser}
+        initialConfig={ticketModalConfig}
+        lang={lang}
       />
 
       {/* Delhi Open Data & API Guide Modal */}

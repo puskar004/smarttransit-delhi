@@ -16,6 +16,7 @@ interface UserProfileModalProps {
   currentUser: UserProfile;
   onSignOut: () => void;
   onSwitchUser: (user: UserProfile) => void;
+  onOpenFullTicket?: () => void;
 }
 
 export function UserProfileModal({
@@ -24,6 +25,7 @@ export function UserProfileModal({
   currentUser,
   onSignOut,
   onSwitchUser,
+  onOpenFullTicket,
 }: UserProfileModalProps) {
   const [activeTab, setActiveTab] = useState<'pass' | 'stats' | 'security'>('pass');
 
@@ -187,6 +189,20 @@ export function UserProfileModal({
                   </div>
                 </div>
               </div>
+
+              {onOpenFullTicket && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenFullTicket();
+                  }}
+                  className="w-full mt-2 py-2.5 bg-[#CCFF00] hover:bg-[#b8e600] text-black font-sans font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
+                >
+                  <Ticket className="w-4 h-4 stroke-[2.5]" />
+                  <span>Open Full DTC ETM Ticket / Pink Pass ↗</span>
+                </button>
+              )}
             </div>
           )}
 

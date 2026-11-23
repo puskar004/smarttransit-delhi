@@ -13,6 +13,7 @@ import {
   Shield,
   Snowflake,
   Sparkles,
+  Ticket,
   Zap,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -43,6 +44,14 @@ interface JourneyPlannerTabProps {
   onSelectJourney: (id: string) => void;
   onOpenTrafficMode: () => void;
   onLiveTrackBus?: (vehicleId: string) => void;
+  onOpenTicket?: (config?: {
+    route?: string;
+    from?: string;
+    to?: string;
+    fare?: number;
+    vehicleId?: string;
+    type?: 'single' | 'pink' | 'daily' | 'pass';
+  }) => void;
   lang?: 'en' | 'hi';
   onClose?: () => void;
 }
@@ -70,6 +79,7 @@ export function JourneyPlannerTab({
   onSelectJourney,
   onOpenTrafficMode,
   onLiveTrackBus,
+  onOpenTicket,
   lang = 'en',
   onClose,
 }: JourneyPlannerTabProps) {
@@ -513,6 +523,46 @@ export function JourneyPlannerTab({
                     <Compass className="w-4 h-4 stroke-[2.5]" />
                     <span>Live Track Bus on Delhi Map ↗</span>
                   </button>
+
+                  {/* DIGITAL TICKET & PINK TICKET ACTIONS */}
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenTicket?.({
+                          route: topPick.routeBadges[0]?.shortName ?? '534',
+                          from: originStop?.name,
+                          to: destStop?.name,
+                          fare: topPick.totalFareInr,
+                          vehicleId: routeBuses[0]?.vehicleId,
+                          type: 'single',
+                        });
+                      }}
+                      className="py-2.5 px-2 rounded-xl bg-[#141824] hover:bg-[#1c2336] border border-[#27324c] hover:border-[#CCFF00] text-white font-mono font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-[0.98]"
+                    >
+                      <Ticket className="w-3.5 h-3.5 text-[#CCFF00]" />
+                      <span>{lang === 'hi' ? `ई-टिकट (₹${topPick.totalFareInr})` : `E-Ticket (₹${topPick.totalFareInr})`}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenTicket?.({
+                          route: topPick.routeBadges[0]?.shortName ?? '534',
+                          from: originStop?.name,
+                          to: destStop?.name,
+                          fare: 0,
+                          vehicleId: routeBuses[0]?.vehicleId,
+                          type: 'pink',
+                        });
+                      }}
+                      className="py-2.5 px-2 rounded-xl bg-[#1a0f17] hover:bg-[#251522] border border-[#f472b6]/40 hover:border-[#f472b6] text-[#f472b6] font-mono font-bold text-xs inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-[0.98]"
+                    >
+                      <span>🌸 {lang === 'hi' ? 'गुलाबी पास (₹0)' : 'Pink Pass (₹0)'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -696,7 +746,26 @@ export function JourneyPlannerTab({
                       {/* Bottom Quick Row */}
                       <div className="flex items-center justify-between pt-1 border-t border-[#1c2232] text-[11px] font-mono text-slate-400">
                         <span>NEXT: <b className="text-white">{formatDurationMin(j.nextBusWaitSec)}</b></span>
-                        <span>FARE: <b className="text-white">₹{j.totalFareInr}</b></span>
+                        <div className="flex items-center gap-2">
+                          <span>FARE: <b className="text-white">₹{j.totalFareInr}</b></span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpenTicket?.({
+                                route: j.routeBadges[0]?.shortName ?? '534',
+                                from: STOP_BY_ID[originStopId]?.name,
+                                to: STOP_BY_ID[destinationStopId]?.name,
+                                fare: j.totalFareInr,
+                                type: 'single',
+                              });
+                            }}
+                            className="text-[10px] font-mono font-bold uppercase text-[#CCFF00] hover:bg-[#CCFF00] hover:text-black px-2 py-0.5 rounded border border-[#CCFF00]/40 transition-colors flex items-center gap-1 cursor-pointer"
+                          >
+                            <Ticket className="w-3 h-3" />
+                            <span>{lang === 'hi' ? 'टिकट' : 'TICKET'}</span>
+                          </button>
+                        </div>
                         <button
                           type="button"
                           onClick={(e) => {

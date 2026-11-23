@@ -3,6 +3,7 @@ import {
   Clock,
   Flame,
   Route as RouteIcon,
+  Ticket,
   Users,
 } from 'lucide-react';
 
@@ -13,6 +14,8 @@ interface QuickServicesBarProps {
   onOpenStopArrivals: () => void;
   onOpenCrowdRadar: () => void;
   onOpenTrafficDelay: () => void;
+  onOpenTicket?: () => void;
+  lang?: 'en' | 'hi';
 }
 
 export function QuickServicesBar({
@@ -22,36 +25,46 @@ export function QuickServicesBar({
   onOpenStopArrivals,
   onOpenCrowdRadar,
   onOpenTrafficDelay,
+  onOpenTicket,
+  lang = 'en',
 }: QuickServicesBarProps) {
   const pills = [
     {
+      id: 'DIGITAL_TICKET',
+      title: lang === 'hi' ? 'ई-टिकट एवं पास' : 'DIGITAL TICKET & PASS',
+      badge: 'ETM QR',
+      icon: Ticket,
+      highlight: true,
+      onClick: onOpenTicket,
+    },
+    {
       id: 'ALL_BUSES',
-      title: 'ALL AVAILABLE BUSES',
+      title: lang === 'hi' ? 'सभी लाइव बसें' : 'ALL AVAILABLE BUSES',
       badge: '72 Live',
       icon: Bus,
       onClick: onOpenAllBuses,
     },
     {
       id: 'PLANNER',
-      title: 'JOURNEY PLANNER',
+      title: lang === 'hi' ? 'यात्रा योजना' : 'JOURNEY PLANNER',
       icon: RouteIcon,
       onClick: onOpenPlanner,
     },
     {
       id: 'STOP_ARRIVALS',
-      title: 'STOP ARRIVALS',
+      title: lang === 'hi' ? 'स्टॉप आगमन' : 'STOP ARRIVALS',
       icon: Clock,
       onClick: onOpenStopArrivals,
     },
     {
       id: 'CROWD_RADAR',
-      title: 'CROWD RADAR',
+      title: lang === 'hi' ? 'भीड़ रडार' : 'CROWD RADAR',
       icon: Users,
       onClick: onOpenCrowdRadar,
     },
     {
       id: 'TRAFFIC_DELAY',
-      title: 'TRAFFIC & DELAY',
+      title: lang === 'hi' ? 'ट्रैफिक एवं देरी' : 'TRAFFIC & DELAY',
       icon: Flame,
       onClick: onOpenTrafficDelay,
     },
@@ -73,7 +86,9 @@ export function QuickServicesBar({
               type="button"
               onClick={item.onClick}
               className={`flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider uppercase transition-all cursor-pointer border ${
-                isActive
+                item.highlight
+                  ? 'bg-[#181f2f] text-[#CCFF00] border-[#CCFF00]/50 hover:border-[#CCFF00] shadow-[0_0_12px_rgba(204,255,0,0.2)]'
+                  : isActive
                   ? 'bg-[#181d2a] text-[#CCFF00] border-[#384259] shadow-sm'
                   : 'bg-[#12151e] text-slate-400 hover:text-white border-[#222838] hover:border-[#384259]'
               }`}

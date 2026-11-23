@@ -1,6 +1,7 @@
 import {
   ChevronLeft,
   Search,
+  Ticket,
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -11,6 +12,7 @@ interface AllBusesViewProps {
   buses: SimulatedBus[];
   onLiveTrackBus: (vehicleId: string) => void;
   onGoToPlanner?: () => void;
+  onOpenTicket?: (config?: { route?: string; vehicleId?: string; fare?: number }) => void;
   onClose?: () => void;
   lang?: 'en' | 'hi';
 }
@@ -20,6 +22,8 @@ type FilterOption = 'ALL' | 'ON_TIME' | 'DELAYED';
 export function AllBusesView({
   buses,
   onLiveTrackBus,
+  onGoToPlanner: _onGoToPlanner,
+  onOpenTicket,
   onClose,
   lang = 'en',
 }: AllBusesViewProps) {
@@ -218,15 +222,32 @@ export function AllBusesView({
                   </div>
                 </div>
 
-                {/* Prominent Solid Neon Volt Live Track Button */}
-                <button
-                  type="button"
-                  onClick={() => onLiveTrackBus(bus.vehicleId)}
-                  className="w-full py-2.5 rounded-xl bg-[#CCFF00] hover:bg-[#bfe600] active:scale-[0.98] text-black font-sans font-black text-xs tracking-wider uppercase transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5 border border-black"
-                >
-                  <span>LIVE TRACK</span>
-                  <span className="font-mono text-sm font-black">↗</span>
-                </button>
+                {/* Action Buttons: Solid Neon Volt Live Track + ETM Ticket */}
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onLiveTrackBus(bus.vehicleId)}
+                    className="col-span-2 py-2.5 rounded-xl bg-[#CCFF00] hover:bg-[#bfe600] active:scale-[0.98] text-black font-sans font-black text-xs tracking-wider uppercase transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5 border border-black"
+                  >
+                    <span>LIVE TRACK</span>
+                    <span className="font-mono text-sm font-black">↗</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onOpenTicket?.({
+                        route: bus.routeShortName,
+                        vehicleId: bus.vehicleId,
+                        fare: 15,
+                      })
+                    }
+                    className="py-2.5 rounded-xl bg-[#141824] hover:bg-[#1f273d] active:scale-[0.98] text-[#CCFF00] border border-[#27324c] hover:border-[#CCFF00] font-mono font-bold text-xs uppercase transition-all cursor-pointer flex items-center justify-center gap-1"
+                    title={lang === 'hi' ? 'ई-टिकट लें' : 'Get E-Ticket'}
+                  >
+                    <Ticket className="w-3.5 h-3.5" />
+                    <span>{lang === 'hi' ? 'टिकट' : 'TICKET'}</span>
+                  </button>
+                </div>
               </div>
             );
           })
