@@ -18,6 +18,7 @@ import { DelhiMap } from './components/DelhiMap';
 import { HelpModal } from './components/HelpModal';
 import { HowItWorksView } from './components/HowItWorksView';
 import { JourneyPlannerTab } from './components/JourneyPlannerTab';
+import { LanguageSelectScreen } from './components/LanguageSelectScreen';
 import { LiveBusTrackerHud } from './components/LiveBusTrackerHud';
 import { SegmentInspectorCard, StopPisCard } from './components/MapInspectors';
 import { QuickServicesBar } from './components/QuickServicesBar';
@@ -100,6 +101,7 @@ export function App() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
+  const [hasChosenLanguage, setHasChosenLanguage] = useState<boolean>(false);
 
   const [lastIngestion, setLastIngestion] = useState<IngestionReport | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -260,9 +262,28 @@ export function App() {
     }
   };
 
-  // If user hasn't signed in yet, render the dedicated SmartLearn-style Login / Onboarding screen!
+  // 1. Language Selection Gate (Audit requirement: user gets language option first before entering app)
+  if (!hasChosenLanguage) {
+    return (
+      <LanguageSelectScreen
+        currentLang={lang}
+        onSelectLanguage={(chosen) => {
+          setLang(chosen);
+          setHasChosenLanguage(true);
+        }}
+      />
+    );
+  }
+
+  // 2. Commuter Auth Gate
   if (!currentUser) {
-    return <AuthScreen onLoginSuccess={handleUserLogin} />;
+    return (
+      <AuthScreen
+        onLoginSuccess={handleUserLogin}
+        lang={lang}
+        onChangeLang={(chosen) => setLang(chosen)}
+      />
+    );
   }
 
   return (

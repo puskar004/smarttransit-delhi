@@ -23,9 +23,11 @@ export interface UserProfile {
 
 interface AuthScreenProps {
   onLoginSuccess: (user: UserProfile) => void;
+  lang?: 'en' | 'hi';
+  onChangeLang?: (l: 'en' | 'hi') => void;
 }
 
-export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
+export function AuthScreen({ onLoginSuccess, lang = 'en', onChangeLang }: AuthScreenProps) {
   const [selectedRole, setSelectedRole] = useState<'commuter' | 'operations'>('commuter');
   const [tab, setTab] = useState<'signin' | 'signup'>('signin');
   const [name, setName] = useState('Rahul Verma');
@@ -118,6 +120,18 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
           </div>
 
           <div className="flex items-center gap-2.5">
+            {onChangeLang && (
+              <button
+                type="button"
+                onClick={() => onChangeLang(lang === 'en' ? 'hi' : 'en')}
+                aria-label="Toggle language between English and Hindi"
+                title="Switch between English and Hindi"
+                className="px-2.5 py-1 rounded-full bg-[#121620] hover:bg-[#1a2130] text-xs font-mono font-bold text-slate-300 hover:text-[#CCFF00] border border-[#242c3e] transition-colors cursor-pointer"
+              >
+                {lang === 'en' ? 'हिन्दी' : 'ENG'}
+              </button>
+            )}
+
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10.5px] font-mono font-bold text-slate-300 bg-[#121620] border border-[#232a3d]">
               <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse" />
               <span>72 LIVE BUSES • AVLS GPS</span>
