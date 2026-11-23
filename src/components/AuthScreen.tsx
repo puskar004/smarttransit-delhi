@@ -6,10 +6,10 @@ import {
   Lock,
   Phone,
   Radio,
-  Sparkles,
   Ticket,
   User,
   Users,
+  Zap,
 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
@@ -212,7 +212,7 @@ export function AuthScreen({ onLoginSuccess }: AuthScreenProps) {
 
                 {/* Subtitle tag */}
                 <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/80 backdrop-blur-md border border-[#262c3e] text-[10px] font-mono text-slate-300 pointer-events-none">
-                  <Sparkles className="w-3 h-3 text-[#ccff00]" />
+                  <Zap className="w-3 h-3 text-[#ccff00]" />
                   <span>DELHI TRANSIT EV · TATA STARBUS AI FLEET</span>
                 </div>
               </div>

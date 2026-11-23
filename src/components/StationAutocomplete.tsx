@@ -3,6 +3,64 @@ import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { DELHI_STOPS } from '../data/delhiNetwork';
 import type { BusStop } from '../types/transit';
 
+export const HINDI_STOP_NAMES: Record<string, string> = {
+  iiit_delhi: 'ओखला फेज-III (ट्रांजिट हब)',
+  kalkaji_mandir: 'कालकाजी मंदिर',
+  nehru_place: 'नेहरू प्लेस टर्मिनल',
+  chirag_delhi: 'चिराग दिल्ली',
+  panchsheel: 'पंचशील पार्क',
+  hauz_khas: 'हौज़ खास क्रॉसिंग',
+  iit_delhi: 'हौज़ खास ट्रांजिट गेट (आईआईटी)',
+  munirka: 'मुनीरका',
+  vasant_vihar: 'वसंत विहार',
+  dhaula_kuan: 'धौला कुआँ (आईजीआई एयरपोर्ट लिंक)',
+  aiims: 'एम्स रिंग रोड',
+  safdarjung: 'सफदरजंग अस्पताल',
+  green_park: 'ग्रीन पार्क',
+  south_ex: 'साउथ एक्सटेंशन',
+  moolchand: 'मूलचंद फ्लाईओवर',
+  greater_kailash: 'ग्रेटर कैलाश-I',
+  lajpat_nagar: 'लाजपत नगर रिंग रोड',
+  ashram: 'आश्रम चौक',
+  new_friends_colony: 'न्यू फ्रेंड्स कॉलोनी',
+  sarai_kale_khan: 'सराय काले खां आईएसबीटी',
+  nizamuddin: 'निज़ामुद्दीन क्रॉसिंग',
+  khan_market: 'खान मार्केट',
+  india_gate: 'इंडिया गेट',
+  pragati_maidan: 'प्रगति मैदान',
+  ito: 'आईटीओ क्रॉसिंग',
+  kashmere_gate: 'कश्मीरी गेट आईएसबीटी',
+  connaught_place: 'राजीव चौक / कनॉट प्लेस',
+  anand_vihar: 'आनंद विहार आईएसबीटी',
+  laxmi_nagar: 'लक्ष्मी नगर',
+  saket: 'साकेत मेट्रो',
+  badarpur: 'बदरपुर बॉर्डर',
+  sarita_vihar: 'सरिता विहार',
+  jasola_apollo: 'जसोला अपोलो',
+  okhla_nsic: 'ओखला एनएसआईसी',
+  mehrauli: 'महरौली टर्मिनल',
+  preet_vihar: 'प्रीत विहार',
+};
+
+// Popular Delhi commuter aliases & landmark keywords (Audit Page 3)
+const DELHI_LANDMARK_ALIASES: Record<string, string[]> = {
+  connaught_place: ['cp', 'rajiv chowk', 'inner circle', 'outer circle', 'barakhamba', 'central'],
+  kashmere_gate: ['isbt', 'kashmere gate isbt', 'inter state bus terminal', 'old delhi', 'red fort', 'du north'],
+  aiims: ['aiims ring road', 'safdarjung', 'trauma centre', 'medical', 'hospital'],
+  anand_vihar: ['anand vihar isbt', 'isbt', 'east delhi terminal', 'kaushambi'],
+  nehru_place: ['nehru place terminal', 'np', 'electronics market', 'paras cinema'],
+  hauz_khas: ['iit', 'iit gate', 'deer park', 'aurobindo', 'village'],
+  iit_delhi: ['iit', 'iit gate', 'iit flyover', 'siri fort'],
+  iiit_delhi: ['iiit', 'iiitd', 'okhla phase 3', 'govindpuri', 'tughlakabad', 'maa anandmayee'],
+  dhaula_kuan: ['igi', 'airport', 't3', 'ring road bypass', 'subroto park', 'cantt', 'aerocity'],
+  ito: ['ito crossing', 'vikas marg', 'police hq', 'pragati maidan', 'supreme court'],
+  saket: ['select citywalk', 'saket metro', 'max hospital', 'anupam'],
+  sarai_kale_khan: ['nizamuddin', 'railway station', 'hazrat nizamuddin', 'rrts'],
+  laxmi_nagar: ['v3s mall', 'east delhi', 'shakarpur'],
+  badarpur: ['badarpur border', 'faridabad border', 'haryana'],
+  jasola_apollo: ['apollo hospital', 'jasola'],
+};
+
 interface StationAutocompleteProps {
   label: string;
   sublabel?: string;
@@ -12,6 +70,7 @@ interface StationAutocompleteProps {
   placeholder?: string;
   isOrigin?: boolean;
   error?: string | null;
+  lang?: 'en' | 'hi';
 }
 
 export function StationAutocomplete({
@@ -20,9 +79,10 @@ export function StationAutocomplete({
   value,
   onChange,
   excludeStopId,
-  placeholder = 'Search stop or metro station...',
+  placeholder = 'Search stop, landmark, or metro station (e.g. CP, AIIMS, IGI T3)...',
   isOrigin = false,
   error,
+  lang = 'en',
 }: StationAutocompleteProps) {
   const inputId = useId();
   const listboxId = useId();
@@ -43,11 +103,16 @@ export function StationAutocomplete({
   // Sync search input with selected stop when closed
   useEffect(() => {
     if (!isOpen) {
-      setSearchTerm(selectedStop ? selectedStop.name : '');
+      if (selectedStop) {
+        const hindiName = HINDI_STOP_NAMES[selectedStop.id];
+        setSearchTerm(lang === 'hi' && hindiName ? `${hindiName} (${selectedStop.name})` : selectedStop.name);
+      } else {
+        setSearchTerm('');
+      }
     }
-  }, [selectedStop, isOpen]);
+  }, [selectedStop, isOpen, lang]);
 
-  // Filter stops based on search term
+  // Filter stops based on search term, including fuzzy aliases & Hindi names
   const filteredStops = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     const stops = DELHI_STOPS.filter((s) => s.id !== excludeStopId);
@@ -67,7 +132,14 @@ export function StationAutocomplete({
       const matchZone = stop.zone.toLowerCase().includes(q);
       const matchMetro = stop.metroInterchange?.toLowerCase().includes(q) ?? false;
       const matchCode = stop.code.toLowerCase().includes(q);
-      return matchName || matchCorridor || matchZone || matchMetro || matchCode;
+      const hindiName = (HINDI_STOP_NAMES[stop.id] ?? '').toLowerCase();
+      const matchHindi = hindiName.includes(q);
+
+      // Check landmark & station aliases
+      const aliases = DELHI_LANDMARK_ALIASES[stop.id] ?? [];
+      const matchAlias = aliases.some((alias) => alias.includes(q) || q.includes(alias));
+
+      return matchName || matchCorridor || matchZone || matchMetro || matchCode || matchHindi || matchAlias;
     });
   }, [searchTerm, excludeStopId]);
 
@@ -90,9 +162,9 @@ export function StationAutocomplete({
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
-        // If query doesn't match any stop, revert to selectedStop
         if (selectedStop) {
-          setSearchTerm(selectedStop.name);
+          const hindiName = HINDI_STOP_NAMES[selectedStop.id];
+          setSearchTerm(lang === 'hi' && hindiName ? `${hindiName} (${selectedStop.name})` : selectedStop.name);
         } else {
           setSearchTerm('');
         }
@@ -100,11 +172,12 @@ export function StationAutocomplete({
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [selectedStop]);
+  }, [selectedStop, lang]);
 
   const selectStop = (stop: BusStop) => {
     onChange(stop.id);
-    setSearchTerm(stop.name);
+    const hindiName = HINDI_STOP_NAMES[stop.id];
+    setSearchTerm(lang === 'hi' && hindiName ? `${hindiName} (${stop.name})` : stop.name);
     setIsOpen(false);
     inputRef.current?.blur();
   };
@@ -141,7 +214,8 @@ export function StationAutocomplete({
         e.preventDefault();
         setIsOpen(false);
         if (selectedStop) {
-          setSearchTerm(selectedStop.name);
+          const hindiName = HINDI_STOP_NAMES[selectedStop.id];
+          setSearchTerm(lang === 'hi' && hindiName ? `${hindiName} (${selectedStop.name})` : selectedStop.name);
         }
         break;
       case 'Tab':
@@ -200,7 +274,6 @@ export function StationAutocomplete({
           placeholder={placeholder}
           onFocus={() => {
             setIsOpen(true);
-            // Select all text on focus for quick overwrite
             inputRef.current?.select();
           }}
           onChange={(e) => {
@@ -224,7 +297,7 @@ export function StationAutocomplete({
               type="button"
               onClick={clearSelection}
               aria-label={`Clear ${label}`}
-              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -237,7 +310,7 @@ export function StationAutocomplete({
               inputRef.current?.focus();
             }}
             aria-label="Toggle stop suggestions"
-            className="p-1 rounded-md text-slate-400 hover:text-white transition-colors"
+            className="p-1 rounded-md text-slate-400 hover:text-white transition-colors cursor-pointer"
           >
             <ChevronDown
               className={`w-3.5 h-3.5 transition-transform duration-200 ${
@@ -261,7 +334,7 @@ export function StationAutocomplete({
         <div className="absolute left-0 right-0 top-full mt-1.5 z-[200] max-h-64 overflow-y-auto rounded-xl bg-[#0f121a] border border-[#2b3348] shadow-[0_12px_36px_rgba(0,0,0,0.85)] no-scrollbar backdrop-blur-xl">
           <div className="sticky top-0 px-3 py-1.5 bg-[#141824] border-b border-[#242b3d] flex items-center justify-between text-[10px] font-mono text-slate-400 uppercase">
             <span>{filteredStops.length} STOPS AVAILABLE</span>
-            <span>Use ↑↓ Enter</span>
+            <span>Use ↑↓ Enter • Supports &ldquo;CP&rdquo;, &ldquo;IGI&rdquo;, &ldquo;ISBT&rdquo;</span>
           </div>
 
           <ul
@@ -276,13 +349,14 @@ export function StationAutocomplete({
                 <Search className="w-4 h-4 mx-auto text-slate-500 mb-1" />
                 <p className="font-semibold text-white">No stop matching &ldquo;{searchTerm}&rdquo;</p>
                 <p className="text-[10.5px] font-mono text-slate-500">
-                  Try typing AIIMS, Nehru Place, Kashmere Gate, or Hauz Khas.
+                  Try typing CP (Rajiv Chowk), AIIMS, Nehru Place, or IGI Airport.
                 </p>
               </li>
             ) : (
               filteredStops.map((stop, index) => {
                 const isSelected = stop.id === value;
                 const isHighlighted = index === highlightedIndex;
+                const hindiName = HINDI_STOP_NAMES[stop.id];
 
                 return (
                   <li
@@ -304,6 +378,11 @@ export function StationAutocomplete({
                         <span className="text-xs font-bold text-white uppercase tracking-tight">
                           {stop.name}
                         </span>
+                        {hindiName && (
+                          <span className="text-[11px] font-sans text-slate-400 font-medium">
+                            ({hindiName})
+                          </span>
+                        )}
                         {stop.isHub && (
                           <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-[#CCFF00]/15 text-[#CCFF00] border border-[#CCFF00]/30">
                             HUB

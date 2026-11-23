@@ -152,13 +152,6 @@ export function Bus3DShowcase({
             REAL-TIME AI ETA
           </span>
         </div>
-
-        {/* Subtle 4-Point Sparkle Icon in lower right (matching reference screenshot) */}
-        <div className="hidden sm:block absolute bottom-4 right-14 pointer-events-none text-slate-500/40 z-10 select-none">
-          <svg className="w-8 h-8 fill-current" viewBox="0 0 24 24">
-            <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z" />
-          </svg>
-        </div>
       </div>
 
       {/* Bottom CTA Hero Dock (Exact Button & Subtitle) */}

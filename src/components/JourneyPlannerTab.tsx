@@ -42,6 +42,7 @@ interface JourneyPlannerTabProps {
   onSelectJourney: (id: string) => void;
   onOpenTrafficMode: () => void;
   onLiveTrackBus?: (vehicleId: string) => void;
+  lang?: 'en' | 'hi';
 }
 
 const POPULAR_DELHI_TRIPS = [
@@ -67,6 +68,7 @@ export function JourneyPlannerTab({
   onSelectJourney,
   onOpenTrafficMode,
   onLiveTrackBus,
+  lang = 'en',
 }: JourneyPlannerTabProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -153,12 +155,13 @@ export function JourneyPlannerTab({
             <div className="flex-1 space-y-2.5">
               {/* Origin Autocomplete */}
               <StationAutocomplete
-                label="FROM (ORIGIN)"
+                label={lang === 'hi' ? 'कहाँ से (प्रारंभ)' : 'FROM (ORIGIN)'}
                 sublabel={originStop?.zone}
                 value={originStopId}
                 onChange={onChangeOrigin}
                 isOrigin={true}
-                placeholder="Type starting stop or metro station..."
+                lang={lang}
+                placeholder={lang === 'hi' ? 'स्टेशन या बस स्टॉप खोजें...' : 'Type starting stop, CP, or metro station...'}
                 error={
                   isSameEndpoint
                     ? 'Origin and destination cannot be the same'
@@ -168,12 +171,13 @@ export function JourneyPlannerTab({
 
               {/* Destination Autocomplete */}
               <StationAutocomplete
-                label="TO (DESTINATION)"
+                label={lang === 'hi' ? 'कहाँ तक (गंतव्य)' : 'TO (DESTINATION)'}
                 sublabel={destStop?.zone}
                 value={destinationStopId}
                 onChange={onChangeDestination}
                 isOrigin={false}
-                placeholder="Type arrival stop or metro station..."
+                lang={lang}
+                placeholder={lang === 'hi' ? 'गंतव्य स्टॉप या मेट्रो खोजें...' : 'Type arrival stop, AIIMS, or metro...'}
                 error={
                   isSameEndpoint
                     ? 'Please choose a different arrival stop'
@@ -466,9 +470,12 @@ export function JourneyPlannerTab({
                     </div>
 
                     <div className="bg-[#141824] p-2.5 rounded-xl border border-[#222a3d] text-right">
-                      <div className="text-[9px] uppercase font-mono font-bold text-slate-400">DTC FARE · DIST</div>
+                      <div className="text-[9px] uppercase font-mono font-bold text-slate-400">DTC FARE · PASS</div>
                       <div className="font-bold mt-0.5 text-white font-mono uppercase text-[10.5px]">
                         ₹{topPick.totalFareInr} · {formatDistanceKm(topPick.totalDistanceMeters)}
+                      </div>
+                      <div className="text-[8.5px] font-mono text-[#4ade80] flex items-center justify-end gap-1 mt-0.5">
+                        <span>Pink Ticket: ₹0 Free</span>
                       </div>
                     </div>
                   </div>

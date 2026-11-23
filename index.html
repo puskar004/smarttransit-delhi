@@ -31,12 +31,41 @@
     <meta name="twitter:description" content="Live crowdedness-aware transit planner with real-time Delhi bus GPS tracking, seat availability, and Kalman traffic delay predictions." />
     <meta name="twitter:image" content="https://puskar004.github.io/smarttransit-delhi/images/delhi-bus-3d.png" />
 
-    <!-- SVG Favicon with Electric Transit Bus Motif -->
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230c0e14'/><rect x='16' y='22' width='68' height='48' rx='10' fill='%231a2130' stroke='%23CCFF00' stroke-width='4'/><rect x='24' y='30' width='52' height='18' rx='4' fill='%2307090e'/><circle cx='32' cy='72' r='8' fill='%23CCFF00'/><circle cx='68' cy='72' r='8' fill='%23CCFF00'/><circle cx='32' cy='72' r='4' fill='%23000'/><circle cx='68' cy='72' r='4' fill='%23000'/></svg>"
-    />
+    <!-- Static SVG Favicon Asset -->
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="alternate icon" href="./favicon.svg" />
+
+    <!-- JSON-LD Transit Application Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "SmartTransit AI Delhi",
+      "applicationCategory": "TravelApplication",
+      "operatingSystem": "All",
+      "url": "https://puskar004.github.io/smarttransit-delhi/",
+      "description": "Real-time crowdedness-aware commute planner with live Delhi bus GPS tracking, seat availability, and Kalman delay prediction.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      }
+    }
+    </script>
+
+    <!-- SPA Redirect Script for GitHub Pages Subpath Deep Links -->
+    <script type="text/javascript">
+      (function(l) {
+        if (l.search[1] === '/' ) {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&')
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location))
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -46,7 +75,38 @@
     />
   </head>
   <body class="bg-[#07090e] text-[#FFFFFF] antialiased selection:bg-[#CCFF00] selection:text-black overflow-x-hidden">
-    <div id="root"></div>
+    <!-- Pre-rendered Static Loading Container inside root (replaced when React hydrates) -->
+    <div id="root">
+      <div style="min-height:100vh;background:#07090e;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:24px;text-align:center;">
+        <div style="width:52px;height:52px;background:#CCFF00;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;box-shadow:0 0 24px rgba(204,255,0,0.35);">
+          <svg style="width:28px;height:28px;stroke:#000;fill:none;stroke-width:2.5;" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+          </svg>
+        </div>
+        <h1 style="font-size:22px;font-weight:900;letter-spacing:-0.5px;text-transform:uppercase;margin:0 0 8px 0;color:#fff;">
+          SMARTTRANSIT<span style="color:#CCFF00;">AI</span> DELHI
+        </h1>
+        <p style="font-size:12px;font-family:monospace;color:#94A3B8;letter-spacing:1px;text-transform:uppercase;margin:0 0 20px 0;">
+          Synchronizing 72 Live Bus Probes &bull; AVLS GPS
+        </p>
+        <div style="width:140px;height:3px;background:#181d2a;border-radius:99px;overflow:hidden;position:relative;">
+          <div style="position:absolute;top:0;left:0;bottom:0;width:45%;background:#CCFF00;border-radius:99px;animation:transitPulse 1.2s infinite ease-in-out;"></div>
+        </div>
+        <noscript>
+          <div style="margin-top:24px;padding:12px 18px;background:#1a140b;border:1px solid #f59e0b;border-radius:10px;color:#fcd34d;font-size:13px;max-width:380px;">
+            ⚠️ Please enable JavaScript to access live Delhi transit maps, delay models, and journey routing.
+          </div>
+        </noscript>
+      </div>
+      <style>
+        @keyframes transitPulse {
+          0% { left: -45%; width: 35%; }
+          50% { left: 35%; width: 60%; }
+          100% { left: 100%; width: 35%; }
+        }
+      </style>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -99,6 +99,7 @@ export function App() {
   const [isApiGuideOpen, setIsApiGuideOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [lang, setLang] = useState<'en' | 'hi'>('en');
 
   const [lastIngestion, setLastIngestion] = useState<IngestionReport | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -309,10 +310,10 @@ export function App() {
         <nav className="flex items-center bg-[#121620] border border-[#242c3e] rounded-full p-1 gap-1">
           {(
             [
-              { id: 'PLANNER', label: 'JOURNEY PLANNER', icon: RouteIcon },
-              { id: 'ALL_BUSES', label: 'ALL BUSES', icon: Bus },
-              { id: 'TRAFFIC', label: 'TRANSIT RADAR', icon: Activity },
-              { id: 'ABOUT', label: 'DATA STACK', icon: BookOpen },
+              { id: 'PLANNER', label: lang === 'hi' ? 'यात्रा योजना' : 'JOURNEY PLANNER', icon: RouteIcon },
+              { id: 'ALL_BUSES', label: lang === 'hi' ? 'सभी बसें' : 'ALL BUSES', icon: Bus },
+              { id: 'TRAFFIC', label: lang === 'hi' ? 'ट्रांजिट रडार' : 'TRANSIT RADAR', icon: Activity },
+              { id: 'ABOUT', label: lang === 'hi' ? 'डेटा स्टैक' : 'DATA STACK', icon: BookOpen },
             ] as const
           ).map((tab) => {
             const Icon = tab.icon;
@@ -342,8 +343,23 @@ export function App() {
           })}
         </nav>
 
-        {/* Right: User Profile Capsule (Neon Volt Circle R + Rahul Verma + DL-DTC-84920) */}
+        {/* Right: User Profile & Controls Capsule */}
         <div className="flex items-center gap-2">
+          {/* Language Toggle: EN / हिन्दी */}
+          <button
+            type="button"
+            onClick={() => {
+              const next = lang === 'en' ? 'hi' : 'en';
+              setLang(next);
+              showToast(next === 'hi' ? 'हिन्दी भाषा सक्रिय की गई।' : 'Switched to English.');
+            }}
+            aria-label="Toggle language between English and Hindi"
+            title="English / हिन्दी"
+            className="px-2.5 py-1 rounded-full bg-[#121620] hover:bg-[#1a2130] text-xs font-mono font-bold text-slate-300 hover:text-[#CCFF00] border border-[#242c3e] transition-colors cursor-pointer"
+          >
+            {lang === 'en' ? 'हिन्दी' : 'ENG'}
+          </button>
+
           {/* Mobile Search Icon */}
           <button
             type="button"
@@ -451,6 +467,7 @@ export function App() {
                 onSelectJourney={setSelectedJourneyId}
                 onOpenTrafficMode={() => setPage('TRAFFIC')}
                 onLiveTrackBus={handleTrackBus}
+                lang={lang}
               />
             ) : page === 'ALL_BUSES' ? (
               <AllBusesView
