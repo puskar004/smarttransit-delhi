@@ -2,8 +2,11 @@ import {
   Activity,
   BookOpen,
   Bus,
+  ChevronLeft,
+  ChevronRight,
   Compass,
   HelpCircle,
+  Menu,
   Pause,
   Play,
   Route as RouteIcon,
@@ -102,6 +105,7 @@ export function App() {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [lang, setLang] = useState<'en' | 'hi'>('en');
   const [hasChosenLanguage, setHasChosenLanguage] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
 
   const [lastIngestion, setLastIngestion] = useState<IngestionReport | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -350,6 +354,7 @@ export function App() {
                   if (tab.id === 'ALL_BUSES') {
                     setShowMapInAllBuses(false);
                   }
+                  setIsSidebarOpen(true);
                 }}
                 className={`px-3.5 py-1.5 rounded-full text-[11px] font-mono font-black uppercase tracking-wider inline-flex items-center gap-1.5 transition-all cursor-pointer ${
                   active
@@ -430,24 +435,29 @@ export function App() {
         onOpenAllBuses={() => {
           setPage('ALL_BUSES');
           setShowMapInAllBuses(false);
+          setIsSidebarOpen(true);
         }}
         onOpenPlanner={() => {
           setPage('PLANNER');
           setTrackedBusId(null);
+          setIsSidebarOpen(true);
         }}
         onOpenStopArrivals={() => {
           setSelectedStopId('iiit_delhi');
           setPage('TRAFFIC');
+          setIsSidebarOpen(true);
           showToast('Opened Live Stop Arrivals for Okhla Ph-III stop.');
         }}
         onOpenCrowdRadar={() => {
           setPage('PLANNER');
           setPreference('COMFORT');
+          setIsSidebarOpen(true);
           showToast('Switched to Crowd Radar & Comfort Routing.');
         }}
         onOpenTrafficDelay={() => {
           setPage('TRAFFIC');
           handleToggleIncident('inc_ashram');
+          setIsSidebarOpen(true);
         }}
       />
 
@@ -465,9 +475,31 @@ export function App() {
           onExportGeoJson={handleExportGeoJson}
         />
       ) : (
-        <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
-          {/* Left Panel */}
-          <aside className="w-full lg:w-[410px] xl:w-[440px] h-[52vh] lg:h-full shrink-0 border-b lg:border-b-0 lg:border-r border-[#1c2232] bg-[#0b0e14] overflow-hidden z-20">
+        <div className="flex-1 min-h-0 relative flex overflow-hidden">
+          {/* Mobile backdrop overlay when drawer is open */}
+          {isSidebarOpen && (
+            <div
+              className="fixed inset-0 z-[550] bg-black/60 backdrop-blur-xs lg:hidden"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+
+          {/* Left Panel Drawer (Slides inside completely; opens via Side Menu Bar or Nav Tabs) */}
+          <aside
+            className={`absolute inset-y-0 left-0 z-[600] w-full sm:w-[420px] xl:w-[450px] h-full shrink-0 border-r border-[#1c2232] bg-[#0b0e14] shadow-[0_0_60px_rgba(0,0,0,0.95)] transition-transform duration-300 ease-in-out flex flex-col ${
+              isSidebarOpen ? 'translate-x-0' : '-translate-x-full pointer-events-none'
+            }`}
+          >
+            {/* Docked Edge Collapse Handle */}
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(false)}
+              title={lang === 'hi' ? 'साइडबार बंद करें' : 'Collapse Sidebar'}
+              className="hidden sm:flex absolute top-4 -right-8 w-8 h-12 bg-[#0b0e14] border-y border-r border-[#1c2232] rounded-r-xl items-center justify-center text-slate-400 hover:text-[#CCFF00] hover:bg-[#121620] cursor-pointer shadow-xl transition-colors z-50 pointer-events-auto"
+            >
+              <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+            </button>
+
             {page === 'PLANNER' ? (
               <JourneyPlannerTab
                 originStopId={originStopId}
@@ -488,6 +520,7 @@ export function App() {
                 onSelectJourney={setSelectedJourneyId}
                 onOpenTrafficMode={() => setPage('TRAFFIC')}
                 onLiveTrackBus={handleTrackBus}
+                onClose={() => setIsSidebarOpen(false)}
                 lang={lang}
               />
             ) : page === 'ALL_BUSES' ? (
@@ -495,6 +528,8 @@ export function App() {
                 buses={buses}
                 onLiveTrackBus={handleTrackBus}
                 onGoToPlanner={() => setPage('PLANNER')}
+                onClose={() => setIsSidebarOpen(false)}
+                lang={lang}
               />
             ) : (
               <TrafficModelTab
@@ -509,12 +544,46 @@ export function App() {
                   setSelectedStopId(null);
                 }}
                 onGoToPlanner={() => setPage('PLANNER')}
+                onClose={() => setIsSidebarOpen(false)}
               />
             )}
           </aside>
 
           {/* Right Main View: Rotatable 3D Bus Stage OR Interactive Delhi Map */}
-          <main className="flex-1 relative min-h-[48vh] lg:min-h-0 bg-[#0a0c10] overflow-hidden">
+          <main className="flex-1 relative w-full h-full bg-[#0a0c10] overflow-hidden">
+            {/* Dedicated Docked Side Menu Bar Button (Visible when sidebar is closed) */}
+            {!isSidebarOpen && (
+              <button
+                type="button"
+                onClick={() => setIsSidebarOpen(true)}
+                title={lang === 'hi' ? 'लाइव बसें सूची खोलें' : 'Open Live Buses List'}
+                className="absolute top-20 left-0 z-30 group flex items-center gap-2.5 px-3 py-2.5 sm:px-3.5 sm:py-3 rounded-r-2xl bg-[#0e121a]/95 backdrop-blur-md border-y border-r border-[#262c3e] hover:border-[#CCFF00] shadow-[0_8px_30px_rgba(0,0,0,0.85)] cursor-pointer transition-all hover:translate-x-1 active:scale-95"
+              >
+                <div className="w-8 h-8 rounded-xl bg-[#CCFF00] text-black flex items-center justify-center font-black shadow-[0_0_12px_rgba(204,255,0,0.4)]">
+                  <Menu className="w-4 h-4 stroke-[2.5]" />
+                </div>
+                <div className="flex flex-col text-left pr-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse" />
+                    <span className="text-xs font-mono font-black uppercase text-white tracking-wider group-hover:text-[#CCFF00]">
+                      {lang === 'hi' ? 'लाइव बसें' : 'LIVE BUSES'}
+                    </span>
+                    <span className="text-[10px] font-mono font-black px-1.5 py-0.5 rounded bg-[#CCFF00]/15 text-[#CCFF00] border border-[#CCFF00]/30">
+                      {buses.length}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-400">
+                    {page === 'PLANNER'
+                      ? (lang === 'hi' ? 'यात्रा योजना खोलें' : 'Open Route Planner')
+                      : page === 'TRAFFIC'
+                      ? (lang === 'hi' ? 'ट्रैफिक रडार खोलें' : 'Open Radar Details')
+                      : (lang === 'hi' ? 'पैनल खोलने के लिए क्लिक करें' : 'Click to View Fleet')}
+                  </span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-[#CCFF00] transition-transform group-hover:translate-x-0.5" />
+              </button>
+            )}
+
             {page === 'ALL_BUSES' && !showMapInAllBuses ? (
               <Rotatable3DBusStage
                 onOpenLiveMap={() => setShowMapInAllBuses(true)}
@@ -557,7 +626,7 @@ export function App() {
                 )}
 
                 {/* Floating Top Telemetry Pill */}
-                <div className="absolute top-4 left-4 z-[500] bg-[#121620]/95 backdrop-blur-md border border-[#262c3e] rounded-full px-3.5 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.8)] flex items-center gap-2.5 text-[11.5px] font-mono">
+                <div className={`absolute top-4 ${isSidebarOpen ? 'left-4 lg:left-[470px]' : 'left-4'} z-[500] bg-[#121620]/95 backdrop-blur-md border border-[#262c3e] rounded-full px-3.5 py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.8)] flex items-center gap-2.5 text-[11.5px] font-mono transition-all duration-300`}>
                   <button
                     type="button"
                     onClick={() => setIsPlaying((p) => !p)}
@@ -584,7 +653,7 @@ export function App() {
 
                 {/* LIVE BUS TRACKING FLOATING HUD */}
                 {trackedBus && (
-                  <div className="absolute top-16 left-4 z-[520]">
+                  <div className={`absolute top-16 ${isSidebarOpen ? 'left-4 lg:left-[470px]' : 'left-4'} z-[520] transition-all duration-300`}>
                     <LiveBusTrackerHud
                       bus={trackedBus}
                       trafficStates={trafficStates}

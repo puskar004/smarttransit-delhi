@@ -2,6 +2,7 @@ import {
   Activity,
   AlertOctagon,
   ArrowRight,
+  ChevronLeft,
   Flame,
   Gauge,
   Users,
@@ -20,6 +21,7 @@ interface TrafficModelTabProps {
   onToggleIncident: (incidentId: string) => void;
   onSelectSegment: (segmentId: string) => void;
   onGoToPlanner: () => void;
+  onClose?: () => void;
 }
 
 export function TrafficModelTab({
@@ -31,6 +33,7 @@ export function TrafficModelTab({
   onToggleIncident,
   onSelectSegment,
   onGoToPlanner,
+  onClose,
 }: TrafficModelTabProps) {
   const activeJamCount = incidents.filter((i) => i.active).length;
 
@@ -63,12 +66,25 @@ export function TrafficModelTab({
         {/* City Overview Hero Card */}
         <div className="bg-[#14161F] border border-[#232736] rounded-2xl p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black tracking-widest text-[#00E5FF] uppercase">
+            <span className="text-[10px] font-black tracking-widest text-[#CCFF00] uppercase">
               Live Transit Telemetry
             </span>
-            <span className="text-[11px] font-mono-tabular text-[#94A3B8]">
-              72 Live Buses Tracked
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono-tabular text-[#94A3B8]">
+                72 Live Buses Tracked
+              </span>
+              {onClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Collapse radar inside"
+                  className="px-2 py-1 rounded-lg bg-[#181d2a] hover:bg-[#CCFF00] hover:text-black border border-[#2b3348] text-slate-300 text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span className="text-[10px] uppercase">COLLAPSE</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div>

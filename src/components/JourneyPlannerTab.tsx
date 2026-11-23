@@ -3,6 +3,7 @@ import {
   ArrowUpDown,
   Bus,
   ChevronDown,
+  ChevronLeft,
   ChevronUp,
   Clock,
   Compass,
@@ -43,6 +44,7 @@ interface JourneyPlannerTabProps {
   onOpenTrafficMode: () => void;
   onLiveTrackBus?: (vehicleId: string) => void;
   lang?: 'en' | 'hi';
+  onClose?: () => void;
 }
 
 const POPULAR_DELHI_TRIPS = [
@@ -69,6 +71,7 @@ export function JourneyPlannerTab({
   onOpenTrafficMode,
   onLiveTrackBus,
   lang = 'en',
+  onClose,
 }: JourneyPlannerTabProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -137,16 +140,31 @@ export function JourneyPlannerTab({
             </h2>
           </div>
 
-          <button
-            type="button"
-            onClick={handleReset}
-            title="Reset to default stops"
-            aria-label="Reset search to defaults"
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-mono font-bold text-slate-400 hover:text-white bg-[#121620] hover:bg-[#181d2a] border border-[#232a3d] transition-colors cursor-pointer"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span className="hidden sm:inline">RESET</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={handleReset}
+              title="Reset to default stops"
+              aria-label="Reset search to defaults"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-mono font-bold text-slate-400 hover:text-white bg-[#121620] hover:bg-[#181d2a] border border-[#232a3d] transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span className="hidden sm:inline">RESET</span>
+            </button>
+
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Collapse panel inside"
+                title="Slide / Collapse planner inside"
+                className="px-2.5 py-1 rounded-lg text-[10.5px] font-mono font-bold text-slate-300 hover:text-black bg-[#151923] hover:bg-[#CCFF00] border border-[#232a3d] transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{lang === 'hi' ? 'अंदर करें' : 'COLLAPSE'}</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Origin / Destination Accessible Inputs + Swap Button */}

@@ -1,4 +1,5 @@
 import {
+  ChevronLeft,
   Search,
   X,
 } from 'lucide-react';
@@ -10,6 +11,8 @@ interface AllBusesViewProps {
   buses: SimulatedBus[];
   onLiveTrackBus: (vehicleId: string) => void;
   onGoToPlanner?: () => void;
+  onClose?: () => void;
+  lang?: 'en' | 'hi';
 }
 
 type FilterOption = 'ALL' | 'ON_TIME' | 'DELAYED';
@@ -17,6 +20,8 @@ type FilterOption = 'ALL' | 'ON_TIME' | 'DELAYED';
 export function AllBusesView({
   buses,
   onLiveTrackBus,
+  onClose,
+  lang = 'en',
 }: AllBusesViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<FilterOption>('ALL');
@@ -62,13 +67,30 @@ export function AllBusesView({
     <div className="h-full flex flex-col bg-[#0b0e14] text-white overflow-hidden font-sans select-none">
       {/* Header Area */}
       <div className="p-4 sm:p-5 border-b border-[#1c2232] bg-[#0d1017] space-y-3.5 shrink-0">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-none">
-            ALL THE BUSES
-          </h1>
-          <p className="text-[10px] font-mono tracking-widest text-slate-400 uppercase mt-1">
-            THE FULL FLEET ROTATION
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white leading-none">
+              {lang === 'hi' ? 'सभी बसें' : 'ALL THE BUSES'}
+            </h1>
+            <p className="text-[10px] font-mono tracking-widest text-slate-400 uppercase mt-1">
+              {lang === 'hi' ? 'दिल्ली सक्रिय फ्लीट रोटेशन' : 'THE FULL FLEET ROTATION'}
+            </p>
+          </div>
+
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Collapse bus list inside"
+              title="Slide / Collapse list inside"
+              className="px-2.5 py-1.5 rounded-xl bg-[#151923] hover:bg-[#CCFF00] hover:text-black border border-[#273045] text-slate-300 hover:border-black flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95 shrink-0"
+            >
+              <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+              <span className="text-[10px] font-mono font-bold uppercase">
+                {lang === 'hi' ? 'अंदर करें' : 'COLLAPSE'}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Filter Pills — Exact Screenshot: All (72), On Time (18), Delayed (43) */}
