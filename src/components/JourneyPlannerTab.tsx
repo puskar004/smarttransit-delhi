@@ -132,51 +132,54 @@ export function JourneyPlannerTab({
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#07090e] text-white font-sans select-none overflow-hidden">
-      {/* 1. SEARCH & ENDPOINTS PANEL */}
-      <div className="p-3.5 sm:p-5 bg-[#0c0e14] border-b border-[#1c2232] space-y-3.5 shrink-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-[#CCFF00] uppercase">
-                THE TRANSIT RADAR / 002
-              </span>
-              <span className="text-[9.5px] px-2 py-0.5 rounded-full bg-[#151923] text-[#CCFF00] font-mono font-bold border border-[#252c3e] uppercase">
-                CROWD + DELAY FUSION
-              </span>
-            </div>
-            <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white mt-1">
-              PLAN COMMUTE.
-            </h2>
+    <div className="flex flex-col h-full bg-[#07090e] text-white font-sans select-none overflow-y-auto">
+      {/* 1. STICKY TOP COMPACT HEADER */}
+      <div className="sticky top-0 z-30 px-3.5 sm:px-5 py-3 bg-[#0c0e14]/95 backdrop-blur-md border-b border-[#1c2232] flex items-center justify-between shrink-0 shadow-md">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-[#CCFF00] uppercase">
+              {lang === 'hi' ? 'दिल्ली ट्रांजिट रडार' : 'THE TRANSIT RADAR'}
+            </span>
+            <span className="text-[9.5px] px-2 py-0.5 rounded-full bg-[#151923] text-[#CCFF00] font-mono font-bold border border-[#252c3e] uppercase">
+              {originStop && destStop
+                ? `${originStop.name.split(' ')[0]} ➔ ${destStop.name.split(' ')[0]}`
+                : 'CROWD + DELAY FUSION'}
+            </span>
           </div>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={handleReset}
-              title="Reset to default stops"
-              aria-label="Reset search to defaults"
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-mono font-bold text-slate-400 hover:text-white bg-[#121620] hover:bg-[#181d2a] border border-[#232a3d] transition-colors cursor-pointer"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span className="hidden sm:inline">RESET</span>
-            </button>
-
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Collapse panel inside"
-                title="Slide / Collapse planner inside"
-                className="px-2.5 py-1 rounded-lg text-[10.5px] font-mono font-bold text-slate-300 hover:text-black bg-[#151923] hover:bg-[#CCFF00] border border-[#232a3d] transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
-              >
-                <ChevronLeft className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{lang === 'hi' ? 'अंदर करें' : 'COLLAPSE'}</span>
-              </button>
-            )}
-          </div>
+          <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-white mt-0.5">
+            {lang === 'hi' ? 'यात्रा योजना' : 'PLAN COMMUTE.'}
+          </h2>
         </div>
 
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleReset}
+            title="Reset to default stops"
+            aria-label="Reset search to defaults"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10.5px] font-mono font-bold text-slate-400 hover:text-white bg-[#121620] hover:bg-[#181d2a] border border-[#232a3d] transition-colors cursor-pointer"
+          >
+            <RotateCcw className="w-3 h-3" />
+            <span className="hidden sm:inline">RESET</span>
+          </button>
+
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Collapse panel inside"
+              title="Slide / Collapse planner inside"
+              className="px-2.5 py-1 rounded-lg text-[10.5px] font-mono font-bold text-slate-300 hover:text-black bg-[#151923] hover:bg-[#CCFF00] border border-[#232a3d] transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{lang === 'hi' ? 'अंदर करें' : 'COLLAPSE'}</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* 2. SEARCH & ENDPOINTS PANEL (Scrolls naturally with results) */}
+      <div className="p-3.5 sm:p-5 bg-[#0c0e14] border-b border-[#1c2232] space-y-3.5">
         {/* Origin / Destination Accessible Inputs + Swap Button */}
         <div className="space-y-2.5">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -301,7 +304,7 @@ export function JourneyPlannerTab({
 
       {/* 2. ACTIVE TRAFFIC ALERT BAR (Warm Amber — NO RED) */}
       {activeJamCount > 0 && (
-        <div className="mx-3.5 sm:mx-4 mt-3 px-3.5 py-2.5 rounded-xl bg-[#18150d] border border-[#f59e0b]/50 flex items-center justify-between gap-2 text-xs text-white shrink-0">
+        <div className="mx-3.5 sm:mx-4 mt-3 px-3.5 py-2.5 rounded-xl bg-[#18150d] border border-[#f59e0b]/50 flex items-center justify-between gap-2 text-xs text-white">
           <span className="inline-flex items-center gap-2 font-medium">
             <AlertCircle className="w-4 h-4 text-[#f59e0b] shrink-0" />
             <span>
@@ -318,8 +321,8 @@ export function JourneyPlannerTab({
         </div>
       )}
 
-      {/* 3. RESULTS STREAM WITH ERROR & LOADING STATES */}
-      <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 no-scrollbar">
+      {/* 3. RESULTS STREAM WITH ERROR & LOADING STATES (Scrolls continuously with search) */}
+      <div className="p-3.5 sm:p-4 space-y-3.5 pb-10">
         {/* Loading State */}
         {isCalculating ? (
           <div className="py-14 text-center space-y-3">

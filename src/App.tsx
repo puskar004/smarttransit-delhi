@@ -653,6 +653,7 @@ export function App() {
                   originStopId={originStopId}
                   destinationStopId={destinationStopId}
                   selectedSegmentId={selectedSegmentId}
+                  selectedStopId={selectedStopId}
                   trackedBusId={trackedBusId}
                   onSelectSegment={(id) => {
                     setSelectedSegmentId(id);
@@ -664,6 +665,16 @@ export function App() {
                   }}
                   onSelectBus={(vehicleId) => {
                     handleTrackBus(vehicleId);
+                  }}
+                  onSetOrigin={(id) => {
+                    setOriginStopId(id);
+                    setPage('PLANNER');
+                    setIsSidebarOpen(true);
+                  }}
+                  onSetDestination={(id) => {
+                    setDestinationStopId(id);
+                    setPage('PLANNER');
+                    setIsSidebarOpen(true);
                   }}
                 />
 

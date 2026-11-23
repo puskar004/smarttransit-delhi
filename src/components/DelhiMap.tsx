@@ -1,9 +1,10 @@
 import L from 'leaflet';
 import { Compass } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import { DELHI_SEGMENTS, DELHI_STOPS, OPERATOR_META, STOP_BY_ID } from '../data/delhiNetwork';
+import { DELHI_ROUTES, DELHI_SEGMENTS, DELHI_STOPS, OPERATOR_META, STOP_BY_ID } from '../data/delhiNetwork';
 import { trafficLevelColor, trafficLevelLabel } from '../engine/trafficModel';
-import type { PlannedJourney, SegmentTrafficState, SimulatedBus, TrafficLevel } from '../types/transit';
+import type { BusStop, PlannedJourney, SegmentTrafficState, SimulatedBus, TrafficLevel } from '../types/transit';
+import { HINDI_STOP_NAMES } from './StationAutocomplete';
 
 interface DelhiMapProps {
   mode: 'PLANNER' | 'TRAFFIC' | 'RADAR';
@@ -13,10 +14,72 @@ interface DelhiMapProps {
   originStopId: string;
   destinationStopId: string;
   selectedSegmentId: string | null;
+  selectedStopId?: string | null;
   trackedBusId?: string | null;
   onSelectSegment: (segmentId: string) => void;
   onSelectStop: (stopId: string) => void;
   onSelectBus?: (vehicleId: string) => void;
+  onSetOrigin?: (stopId: string) => void;
+  onSetDestination?: (stopId: string) => void;
+}
+
+function createStopPopupHtml(
+  stop: BusStop,
+  isOrigin: boolean,
+  isDest: boolean,
+  hindiName?: string
+): string {
+  const routesAtStop = DELHI_ROUTES.filter((r) =>
+    r.stopIds.includes(stop.id)
+  ).map((r) => r.shortName);
+
+  return `<div style="font-family:'Plus Jakarta Sans',sans-serif;color:#ffffff;background:#0d1017;padding:12px;border-radius:12px;min-width:230px;max-width:280px;box-shadow:0 16px 36px rgba(0,0,0,0.95);font-size:12px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;border-bottom:1px solid #1e2638;padding-bottom:8px;margin-bottom:8px">
+      <div>
+        <div style="font-size:9.5px;font-family:'JetBrains Mono',monospace;color:${isOrigin ? '#10B981' : isDest ? '#CCFF00' : '#38BDF8'};font-weight:800;text-transform:uppercase;letter-spacing:0.05em">
+          ${isOrigin ? '📍 YOUR BOARDING STOP' : isDest ? '🏁 YOUR DESTINATION' : '📍 BUS STOP / STATION'}
+        </div>
+        <div style="font-size:14px;font-weight:900;color:#ffffff;line-height:1.2;margin-top:2px">
+          ${stop.name}
+        </div>
+        ${hindiName ? `<div style="font-size:11px;color:#94A3B8;margin-top:2px;font-weight:500">${hindiName}</div>` : ''}
+      </div>
+      ${stop.isHub ? '<span style="font-size:9px;font-family:\'JetBrains Mono\',monospace;background:rgba(204,255,0,0.15);color:#CCFF00;border:1px solid rgba(204,255,0,0.3);padding:2px 6px;border-radius:4px;font-weight:800">HUB</span>' : ''}
+    </div>
+
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#94A3B8;display:flex;flex-direction:column;gap:4px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between">
+        <span>ZONE:</span>
+        <b style="color:#ffffff">${stop.zone}</b>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span>CORRIDOR:</span>
+        <b style="color:#ffffff">${stop.corridor}</b>
+      </div>
+      ${stop.metroInterchange ? `
+      <div style="display:flex;justify-content:space-between;color:#c084fc">
+        <span>METRO LINK:</span>
+        <b>${stop.metroInterchange}</b>
+      </div>` : ''}
+      ${routesAtStop.length > 0 ? `
+      <div style="margin-top:3px;padding-top:4px;border-top:1px dashed #1e2638">
+        <span style="display:block;margin-bottom:3px;font-size:9.5px;color:#64748B">SERVICED BY BUSES (${routesAtStop.length}):</span>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${routesAtStop.slice(0, 6).map((r) => `<span style="background:#151b28;color:#CCFF00;border:1px solid #283750;padding:1px 5px;border-radius:4px;font-size:9.5px;font-weight:800">${r}</span>`).join('')}
+          ${routesAtStop.length > 6 ? `<span style="color:#64748B;font-size:9.5px;line-height:1.6">+${routesAtStop.length - 6} more</span>` : ''}
+        </div>
+      </div>` : ''}
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding-top:6px;border-top:1px solid #1e2638">
+      <button onclick="window.delhiMapSetOrigin && window.delhiMapSetOrigin('${stop.id}')" style="background:#10241b;color:#10B981;border:1px solid #10B981;padding:6px 4px;border-radius:6px;font-size:10px;font-weight:800;cursor:pointer;font-family:'JetBrains Mono',monospace;text-transform:uppercase">
+        📍 Start Here
+      </button>
+      <button onclick="window.delhiMapSetDestination && window.delhiMapSetDestination('${stop.id}')" style="background:#1e2410;color:#CCFF00;border:1px solid #CCFF00;padding:6px 4px;border-radius:6px;font-size:10px;font-weight:800;cursor:pointer;font-family:'JetBrains Mono',monospace;text-transform:uppercase">
+        🏁 End Here
+      </button>
+    </div>
+  </div>`;
 }
 
 interface UndirectedMapLink {
@@ -61,10 +124,13 @@ export function DelhiMap({
   originStopId,
   destinationStopId,
   selectedSegmentId,
+  selectedStopId,
   trackedBusId,
   onSelectSegment,
   onSelectStop,
   onSelectBus,
+  onSetOrigin,
+  onSetDestination,
 }: DelhiMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -74,13 +140,28 @@ export function DelhiMap({
   const stopLayerRef = useRef<L.LayerGroup | null>(null);
   const busLayerRef = useRef<L.LayerGroup | null>(null);
 
-  const callbacksRef = useRef({ onSelectSegment, onSelectStop, onSelectBus });
-  callbacksRef.current = { onSelectSegment, onSelectStop, onSelectBus };
+  const callbacksRef = useRef({ onSelectSegment, onSelectStop, onSelectBus, onSetOrigin, onSetDestination });
+  callbacksRef.current = { onSelectSegment, onSelectStop, onSelectBus, onSetOrigin, onSetDestination };
+
+  // Register global helpers for popup action buttons
+  useEffect(() => {
+    (window as any).delhiMapSetOrigin = (id: string) => {
+      callbacksRef.current.onSetOrigin?.(id);
+    };
+    (window as any).delhiMapSetDestination = (id: string) => {
+      callbacksRef.current.onSetDestination?.(id);
+    };
+    return () => {
+      delete (window as any).delhiMapSetOrigin;
+      delete (window as any).delhiMapSetDestination;
+    };
+  }, []);
 
   const lastFittedEndpointsRef = useRef<string>('');
   const lastTrackedBusCenterRef = useRef<string>('');
   const trackedMarkerRef = useRef<L.Marker | null>(null);
   const trackedBusIdRef = useRef<string | null>(null);
+  const stopRendererRef = useRef<L.SVG | null>(null);
 
   // 1. Initialize Leaflet map with Dark Matter tiles once
   useEffect(() => {
@@ -92,7 +173,6 @@ export function DelhiMap({
       minZoom: 11,
       maxZoom: 16,
       zoomControl: false,
-      preferCanvas: true,
     });
 
     L.control.zoom({ position: 'topright' }).addTo(map);
@@ -112,11 +192,15 @@ export function DelhiMap({
     map.createPane('routePane');
     map.getPane('routePane')!.style.zIndex = '450';
 
-    map.createPane('stopPane');
-    map.getPane('stopPane')!.style.zIndex = '520';
-
     map.createPane('busPane');
-    map.getPane('busPane')!.style.zIndex = '560';
+    map.getPane('busPane')!.style.zIndex = '520';
+
+    map.createPane('stopPane');
+    map.getPane('stopPane')!.style.zIndex = '600';
+    map.getPane('stopPane')!.style.pointerEvents = 'auto';
+
+    const stopRenderer = L.svg({ pane: 'stopPane' });
+    stopRendererRef.current = stopRenderer;
 
     const routeGroup = L.layerGroup([], { pane: 'routePane' }).addTo(map);
     const stopGroup = L.layerGroup([], { pane: 'stopPane' }).addTo(map);
@@ -267,14 +351,26 @@ export function DelhiMap({
 
           if (isOrigin) {
             // User's Pickup / Boarding Location!
-            L.circleMarker([stop.lat, stop.lng], {
+            const marker = L.circleMarker([stop.lat, stop.lng], {
               pane: 'stopPane',
+              renderer: stopRendererRef.current ?? undefined,
               radius: 9,
               fillColor: '#10B981',
               color: '#FFFFFF',
               weight: 3,
               fillOpacity: 1,
-            }).addTo(stopGroup);
+              className: 'delhi-clickable-stop',
+            })
+              .on('click', (e) => {
+                L.DomEvent.stopPropagation(e);
+                marker.openPopup();
+                callbacksRef.current.onSelectStop(stop.id);
+              })
+              .bindPopup(createStopPopupHtml(stop, true, false, HINDI_STOP_NAMES[stop.id]), {
+                offset: [0, -10],
+                className: 'pravaah-dark-popup',
+              })
+              .addTo(stopGroup);
 
             L.marker([stop.lat, stop.lng], {
               pane: 'busPane',
@@ -289,14 +385,26 @@ export function DelhiMap({
             }).addTo(routeGroup);
           } else if (isDest) {
             // User's Destination / Drop-off Location!
-            L.circleMarker([stop.lat, stop.lng], {
+            const marker = L.circleMarker([stop.lat, stop.lng], {
               pane: 'stopPane',
+              renderer: stopRendererRef.current ?? undefined,
               radius: 9,
               fillColor: '#CCFF00',
               color: '#000000',
               weight: 3,
               fillOpacity: 1,
-            }).addTo(stopGroup);
+              className: 'delhi-clickable-stop',
+            })
+              .on('click', (e) => {
+                L.DomEvent.stopPropagation(e);
+                marker.openPopup();
+                callbacksRef.current.onSelectStop(stop.id);
+              })
+              .bindPopup(createStopPopupHtml(stop, false, true, HINDI_STOP_NAMES[stop.id]), {
+                offset: [0, -10],
+                className: 'pravaah-dark-popup',
+              })
+              .addTo(stopGroup);
 
             L.marker([stop.lat, stop.lng], {
               pane: 'busPane',
@@ -310,44 +418,109 @@ export function DelhiMap({
               }),
             }).addTo(routeGroup);
           } else {
-            L.circleMarker([stop.lat, stop.lng], {
+            const marker = L.circleMarker([stop.lat, stop.lng], {
               pane: 'stopPane',
-              radius: isNext ? 8 : 5,
-              fillColor: isNext ? '#CCFF00' : '#1E222D',
+              renderer: stopRendererRef.current ?? undefined,
+              radius: isNext ? 8 : 6,
+              fillColor: isNext ? '#CCFF00' : '#141824',
               color: isNext ? '#FFFFFF' : '#38BDF8',
-              weight: isNext ? 3 : 2,
+              weight: isNext ? 3 : 2.5,
               fillOpacity: 1,
+              className: 'delhi-clickable-stop',
             })
+              .on('click', (e) => {
+                L.DomEvent.stopPropagation(e);
+                marker.openPopup();
+                callbacksRef.current.onSelectStop(stop.id);
+              })
+              .bindPopup(createStopPopupHtml(stop, false, false, HINDI_STOP_NAMES[stop.id]), {
+                offset: [0, -8],
+                className: 'pravaah-dark-popup',
+              })
               .bindTooltip(
-                `<b>${stop.name}</b>${isNext ? '<br/><span style="color:#CCFF00;font-weight:bold">APPROACHING NEXT STOP</span>' : ''}`,
-                { direction: 'top', offset: [0, -6], className: 'pravaah-dark-tooltip' }
+                `<b>${stop.name}</b>${isNext ? '<br/><span style="color:#CCFF00;font-weight:bold">APPROACHING NEXT STOP</span>' : ''}<br/><span style="color:#38BDF8;font-size:10px">Click for location details</span>`,
+                { direction: 'top', offset: [0, -8], className: 'pravaah-dark-tooltip' }
               )
               .addTo(stopGroup);
           }
+        });
+
+        // Draw all other Delhi stops outside tracked route as clickable blue dots
+        DELHI_STOPS.forEach((stop) => {
+          if (routeStops.includes(stop.id) || stop.id === originStopId || stop.id === destinationStopId) return;
+          const marker = L.circleMarker([stop.lat, stop.lng], {
+            pane: 'stopPane',
+            renderer: stopRendererRef.current ?? undefined,
+            radius: stop.isHub ? 5.5 : 4.5,
+            fillColor: '#0e121a',
+            color: '#38BDF8',
+            weight: 2,
+            opacity: 0.8,
+            fillOpacity: 0.85,
+            className: 'delhi-clickable-stop',
+          })
+            .on('click', (e) => {
+              L.DomEvent.stopPropagation(e);
+              marker.openPopup();
+              callbacksRef.current.onSelectStop(stop.id);
+            })
+            .bindPopup(createStopPopupHtml(stop, false, false, HINDI_STOP_NAMES[stop.id]), {
+              offset: [0, -8],
+              className: 'pravaah-dark-popup',
+            })
+            .bindTooltip(
+              `<b>${stop.name}</b><br/><span style="color:#38BDF8;font-size:10px">Click for location details</span>`,
+              { direction: 'top', offset: [0, -6], className: 'pravaah-dark-tooltip' }
+            )
+            .addTo(stopGroup);
         });
 
         // Also render Origin and Dest if they exist outside this specific bus route
         const originObj = STOP_BY_ID[originStopId];
         const destObj = STOP_BY_ID[destinationStopId];
         if (originObj && !routeStops.includes(originStopId)) {
-          L.circleMarker([originObj.lat, originObj.lng], {
+          const marker = L.circleMarker([originObj.lat, originObj.lng], {
             pane: 'stopPane',
+            renderer: stopRendererRef.current ?? undefined,
             radius: 8,
             fillColor: '#10B981',
             color: '#FFFFFF',
             weight: 3,
             fillOpacity: 1,
-          }).addTo(stopGroup);
+            className: 'delhi-clickable-stop',
+          })
+            .on('click', (e) => {
+              L.DomEvent.stopPropagation(e);
+              marker.openPopup();
+              callbacksRef.current.onSelectStop(originObj.id);
+            })
+            .bindPopup(createStopPopupHtml(originObj, true, false, HINDI_STOP_NAMES[originObj.id]), {
+              offset: [0, -10],
+              className: 'pravaah-dark-popup',
+            })
+            .addTo(stopGroup);
         }
         if (destObj && !routeStops.includes(destinationStopId)) {
-          L.circleMarker([destObj.lat, destObj.lng], {
+          const marker = L.circleMarker([destObj.lat, destObj.lng], {
             pane: 'stopPane',
+            renderer: stopRendererRef.current ?? undefined,
             radius: 8,
             fillColor: '#CCFF00',
             color: '#000000',
             weight: 3,
             fillOpacity: 1,
-          }).addTo(stopGroup);
+            className: 'delhi-clickable-stop',
+          })
+            .on('click', (e) => {
+              L.DomEvent.stopPropagation(e);
+              marker.openPopup();
+              callbacksRef.current.onSelectStop(destObj.id);
+            })
+            .bindPopup(createStopPopupHtml(destObj, false, true, HINDI_STOP_NAMES[destObj.id]), {
+              offset: [0, -10],
+              className: 'pravaah-dark-popup',
+            })
+            .addTo(stopGroup);
         }
 
         // Fit bounds to show BOTH commuter's pickup stop and approaching bus!
@@ -447,15 +620,26 @@ export function DelhiMap({
         const isEnd = sId === originStopId || sId === destinationStopId;
         if (isEnd) continue;
 
-        L.circleMarker([stop.lat, stop.lng], {
+        const marker = L.circleMarker([stop.lat, stop.lng], {
           pane: 'stopPane',
-          radius: 5,
-          fillColor: '#1E222D',
+          renderer: stopRendererRef.current ?? undefined,
+          radius: 6.5,
+          fillColor: '#101422',
           color: '#00E5FF',
-          weight: 2,
+          weight: 2.5,
           fillOpacity: 1,
+          className: 'delhi-clickable-stop',
         })
-          .bindTooltip(`<b>${stop.name}</b>`, {
+          .on('click', (e) => {
+            L.DomEvent.stopPropagation(e);
+            marker.openPopup();
+            callbacksRef.current.onSelectStop(stop.id);
+          })
+          .bindPopup(createStopPopupHtml(stop, false, false, HINDI_STOP_NAMES[stop.id]), {
+            offset: [0, -8],
+            className: 'pravaah-dark-popup',
+          })
+          .bindTooltip(`<b>${stop.name}</b><br/><span style="color:#00E5FF;font-size:10px">Click for location details</span>`, {
             direction: 'top',
             offset: [0, -6],
             className: 'pravaah-dark-tooltip',
@@ -463,19 +647,61 @@ export function DelhiMap({
           .addTo(stopGroup);
       }
 
+      // Draw all other Delhi transit stops as clickable network points
+      DELHI_STOPS.forEach((stop) => {
+        if (routeStopIds.has(stop.id) || stop.id === originStopId || stop.id === destinationStopId) return;
+        const marker = L.circleMarker([stop.lat, stop.lng], {
+          pane: 'stopPane',
+          renderer: stopRendererRef.current ?? undefined,
+          radius: stop.isHub ? 5.5 : 4.5,
+          fillColor: '#0e121a',
+          color: '#38BDF8',
+          weight: 2,
+          opacity: 0.8,
+          fillOpacity: 0.85,
+          className: 'delhi-clickable-stop',
+        })
+          .on('click', (e) => {
+            L.DomEvent.stopPropagation(e);
+            marker.openPopup();
+            callbacksRef.current.onSelectStop(stop.id);
+          })
+          .bindPopup(createStopPopupHtml(stop, false, false, HINDI_STOP_NAMES[stop.id]), {
+            offset: [0, -8],
+            className: 'pravaah-dark-popup',
+          })
+          .bindTooltip(
+            `<b>${stop.name}</b><br/><span style="color:#38BDF8;font-size:10px">Click for location details</span>`,
+            { direction: 'top', offset: [0, -6], className: 'pravaah-dark-tooltip' }
+          )
+          .addTo(stopGroup);
+      });
+
       // Origin Pin (Glowing Emerald)
       const origin = STOP_BY_ID[originStopId];
       const dest = STOP_BY_ID[destinationStopId];
 
       if (origin) {
-        L.circleMarker([origin.lat, origin.lng], {
+        const marker = L.circleMarker([origin.lat, origin.lng], {
           pane: 'stopPane',
-          radius: 7,
+          renderer: stopRendererRef.current ?? undefined,
+          radius: 8.5,
           fillColor: '#10B981',
           color: '#FFFFFF',
           weight: 3,
           fillOpacity: 1,
-        }).addTo(stopGroup);
+          className: 'delhi-clickable-stop',
+        })
+          .on('click', (e) => {
+            L.DomEvent.stopPropagation(e);
+            marker.openPopup();
+            callbacksRef.current.onSelectStop(origin.id);
+          })
+          .bindPopup(createStopPopupHtml(origin, true, false, HINDI_STOP_NAMES[origin.id]), {
+            offset: [0, -10],
+            className: 'pravaah-dark-popup',
+          })
+          .addTo(stopGroup);
 
         L.marker([origin.lat, origin.lng], {
           pane: 'busPane',
@@ -490,14 +716,26 @@ export function DelhiMap({
 
       // Destination Pin (Volt Accent)
       if (dest) {
-        L.circleMarker([dest.lat, dest.lng], {
+        const marker = L.circleMarker([dest.lat, dest.lng], {
           pane: 'stopPane',
-          radius: 7,
+          renderer: stopRendererRef.current ?? undefined,
+          radius: 8.5,
           fillColor: '#CCFF00',
           color: '#000000',
           weight: 3,
           fillOpacity: 1,
-        }).addTo(stopGroup);
+          className: 'delhi-clickable-stop',
+        })
+          .on('click', (e) => {
+            L.DomEvent.stopPropagation(e);
+            marker.openPopup();
+            callbacksRef.current.onSelectStop(dest.id);
+          })
+          .bindPopup(createStopPopupHtml(dest, false, true, HINDI_STOP_NAMES[dest.id]), {
+            offset: [0, -10],
+            className: 'pravaah-dark-popup',
+          })
+          .addTo(stopGroup);
 
         L.marker([dest.lat, dest.lng], {
           pane: 'busPane',
@@ -521,21 +759,29 @@ export function DelhiMap({
         });
       }
     } else {
-      // In Traffic/Radar mode, show major Delhi transit hubs
-      for (const stop of DELHI_STOPS.filter((s) => s.isHub)) {
-        L.circleMarker([stop.lat, stop.lng], {
+      // In Traffic, Radar, or All Buses map mode: show ALL Delhi transit stops
+      for (const stop of DELHI_STOPS) {
+        const isSelected = selectedStopId === stop.id;
+        const marker = L.circleMarker([stop.lat, stop.lng], {
           pane: 'stopPane',
-          radius: 5,
-          fillColor: '#1E222D',
-          color: '#38BDF8',
-          weight: 2,
+          renderer: stopRendererRef.current ?? undefined,
+          radius: isSelected ? 8 : stop.isHub ? 6.5 : 5,
+          fillColor: isSelected ? '#CCFF00' : '#121622',
+          color: isSelected ? '#FFFFFF' : '#38BDF8',
+          weight: isSelected ? 3.5 : stop.isHub ? 2.5 : 2,
           fillOpacity: 1,
+          className: 'delhi-clickable-stop',
         })
           .on('click', (e) => {
             L.DomEvent.stopPropagation(e);
+            marker.openPopup();
             callbacksRef.current.onSelectStop(stop.id);
           })
-          .bindTooltip(`<b>${stop.name}</b><br/><span style="color:#94A3B8">Click for live arrival board</span>`, {
+          .bindPopup(createStopPopupHtml(stop, stop.id === originStopId, stop.id === destinationStopId, HINDI_STOP_NAMES[stop.id]), {
+            offset: [0, -8],
+            className: 'pravaah-dark-popup',
+          })
+          .bindTooltip(`<b>${stop.name}</b><br/><span style="color:#38BDF8;font-size:10px">Click for location &amp; live buses</span>`, {
             direction: 'top',
             offset: [0, -6],
             className: 'pravaah-dark-tooltip',
@@ -543,7 +789,21 @@ export function DelhiMap({
           .addTo(stopGroup);
       }
     }
-  }, [mode, activeJourney, originStopId, destinationStopId, trackedBusId, buses]);
+
+    // Active selected stop glowing halo ring
+    if (selectedStopId && STOP_BY_ID[selectedStopId]) {
+      const selectedStop = STOP_BY_ID[selectedStopId];
+      L.circleMarker([selectedStop.lat, selectedStop.lng], {
+        pane: 'busPane',
+        radius: 14,
+        fillColor: '#38BDF8',
+        color: '#CCFF00',
+        weight: 3,
+        fillOpacity: 0.35,
+        interactive: false,
+      }).addTo(stopGroup);
+    }
+  }, [mode, activeJourney, originStopId, destinationStopId, selectedStopId, trackedBusId, buses]);
 
   // 4. Draw moving live buses with passenger occupancy badges & Live Track pulse
   useEffect(() => {
